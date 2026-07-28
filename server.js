@@ -9,6 +9,7 @@ const designationRoutes = require("./routes/designationRoutes");
 const locationRoutes = require("./routes/locationRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const assetRoutes = require("./routes/assetRoutes");
 
 const app = express();
 
@@ -27,6 +28,17 @@ app.use("/api/designations", designationRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/categories", categoryRoutes);
+
+// Temporary Test Route
+app.post("/test", (req, res) => {
+    res.json({
+        success: true,
+        message: "POST is working"
+    });
+});
+
+// Assets API
+app.use("/api/assets", assetRoutes);
 
 const PORT = process.env.PORT || 5000;
 
