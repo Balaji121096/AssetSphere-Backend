@@ -3,15 +3,16 @@ const express = require("express");
 const router = express.Router();
 
 const reportController = require("../controllers/reportController");
+const verifyToken = require("../middleware/authMiddleware");
 
-router.get("/assets", reportController.getAllAssets);
+router.get("/assets",  verifyToken, reportController.getAllAssets);
 
-router.get("/assigned", reportController.getAssignedAssets);
+router.get("/assigned",  verifyToken, reportController.getAssignedAssets);
 
-router.get("/scrap", reportController.getScrapAssets);
+router.get("/scrap",  verifyToken, reportController.getScrapAssets);
 
-router.get("/repair", reportController.getRepairAssets);
+router.get("/repair",  verifyToken, reportController.getRepairAssets);
 
-router.get("/employee-assets", reportController.getEmployeeAssets);
+router.get("/employee-assets",  verifyToken, reportController.getEmployeeAssets);
 
 module.exports = router;

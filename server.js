@@ -12,6 +12,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const assetRoutes = require("./routes/assetRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/vendors", vendorRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/auth", authRoutes);
 
 // Temporary Test Route
 app.post("/test", (req, res) => {
