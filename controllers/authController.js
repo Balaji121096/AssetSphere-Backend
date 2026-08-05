@@ -66,6 +66,9 @@ const login = async (req, res) => {
 
         );
 
+        console.log("Generated Token:");
+console.log(token);
+
         res.json({
 
             success: true,
