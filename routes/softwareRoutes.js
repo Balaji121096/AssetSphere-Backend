@@ -16,6 +16,13 @@ router.get(
     softwareController.getSoftware
 );
 
+router.get(
+    "/expiry-alerts",
+    verifyToken,
+    authorizeRole("Admin", "IT"),
+    softwareController.getExpiryAlerts
+);
+
 
 // GET Software By ID
 router.get(

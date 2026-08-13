@@ -163,10 +163,84 @@ const deleteSoftware = async (softwareId) => {
     return result;
 };
 
+// GET software expiry alerts
+const getExpiryAlerts = async () => {
+
+    const [rows] = await db.query(`
+        SELECT
+            sp.software_id,
+            sp.software_code,
+            sp.software_name,
+            sp.publisher,
+            sp.version,
+            sp.license_type,
+            sp.total_licenses,
+            sp.expiry_date,
+            sp.cost,
+            sp.status,
+            sp.vendor_id,
+            v.vendor_name,
+
+            DATEDIFF(
+                DATE(sp.expiry_date),
+                CURDATE()
+            ) AS days_remaining,
+
+            CASE
+
+                WHEN sp.expiry_date < CURDATE()
+                    THEN 'Expired'
+
+                WHEN DATEDIFF(
+                    DATE(sp.expiry_date),
+                    CURDATE()
+                ) BETWEEN 0 AND 10
+                    THEN 'Critical'
+
+                WHEN DATEDIFF(
+                    DATE(sp.expiry_date),
+                    CURDATE()
+                ) BETWEEN 11 AND 20
+                    THEN '10-20 Days'
+
+                WHEN DATEDIFF(
+                    DATE(sp.expiry_date),
+                    CURDATE()
+                ) BETWEEN 21 AND 30
+                    THEN '20-30 Days'
+
+                ELSE 'Active'
+
+            END AS expiry_status
+
+        FROM software_products sp
+
+        LEFT JOIN vendors v
+            ON sp.vendor_id = v.vendor_id
+
+        WHERE
+            sp.expiry_date IS NOT NULL
+            AND (
+                sp.expiry_date < CURDATE()
+                OR DATEDIFF(
+                    DATE(sp.expiry_date),
+                    CURDATE()
+                ) BETWEEN 0 AND 30
+            )
+
+        ORDER BY
+            days_remaining ASC,
+            sp.software_id ASC
+    `);
+
+    return rows;
+};
+
 module.exports = {
     getAllSoftware,
     getSoftwareById,
     addSoftware,
     updateSoftware,
-    deleteSoftware
+    deleteSoftware,
+    getExpiryAlerts
 };

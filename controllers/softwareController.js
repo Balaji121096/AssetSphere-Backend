@@ -3,7 +3,9 @@ const softwareModel = require("../models/softwareModel");
 // GET All Software
 const getSoftware = async (req, res) => {
     try {
-        const software = await softwareModel.getAllSoftware();
+
+        const software =
+            await softwareModel.getAllSoftware();
 
         res.json({
             success: true,
@@ -12,12 +14,14 @@ const getSoftware = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
+
     }
 };
 
@@ -25,15 +29,19 @@ const getSoftware = async (req, res) => {
 // GET Software By ID
 const getSoftwareById = async (req, res) => {
     try {
-        const software = await softwareModel.getSoftwareById(
-            req.params.id
-        );
+
+        const software =
+            await softwareModel.getSoftwareById(
+                req.params.id
+            );
 
         if (software.length === 0) {
+
             return res.status(404).json({
                 success: false,
                 message: "Software not found"
             });
+
         }
 
         res.json({
@@ -42,12 +50,14 @@ const getSoftwareById = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
+
     }
 };
 
@@ -56,7 +66,8 @@ const getSoftwareById = async (req, res) => {
 const addSoftware = async (req, res) => {
     try {
 
-        const result = await softwareModel.addSoftware(req.body);
+        const result =
+            await softwareModel.addSoftware(req.body);
 
         res.status(201).json({
             success: true,
@@ -65,12 +76,14 @@ const addSoftware = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
+
     }
 };
 
@@ -79,16 +92,19 @@ const addSoftware = async (req, res) => {
 const updateSoftware = async (req, res) => {
     try {
 
-        const result = await softwareModel.updateSoftware(
-            req.params.id,
-            req.body
-        );
+        const result =
+            await softwareModel.updateSoftware(
+                req.params.id,
+                req.body
+            );
 
         if (result.affectedRows === 0) {
+
             return res.status(404).json({
                 success: false,
                 message: "Software not found"
             });
+
         }
 
         res.json({
@@ -97,12 +113,14 @@ const updateSoftware = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
+
     }
 };
 
@@ -111,15 +129,18 @@ const updateSoftware = async (req, res) => {
 const deleteSoftware = async (req, res) => {
     try {
 
-        const result = await softwareModel.deleteSoftware(
-            req.params.id
-        );
+        const result =
+            await softwareModel.deleteSoftware(
+                req.params.id
+            );
 
         if (result.affectedRows === 0) {
+
             return res.status(404).json({
                 success: false,
                 message: "Software not found"
             });
+
         }
 
         res.json({
@@ -128,20 +149,50 @@ const deleteSoftware = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
+
     }
 };
 
 
+// GET Software Expiry Alerts
+const getExpiryAlerts = async (req, res) => {
+    try {
+
+        const alerts =
+            await softwareModel.getExpiryAlerts();
+
+        res.json({
+            success: true,
+            count: alerts.length,
+            data: alerts
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+
+    }
+};
+
+
+// EXPORT
 module.exports = {
     getSoftware,
     getSoftwareById,
     addSoftware,
     updateSoftware,
-    deleteSoftware
+    deleteSoftware,
+    getExpiryAlerts
 };
