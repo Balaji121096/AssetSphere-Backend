@@ -14,6 +14,8 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const authRoutes = require("./routes/authRoutes");
 const softwareRoutes = require("./routes/softwareRoutes");
+const vendorDocumentRoutes = require("./routes/vendorDocumentRoutes");
+const purchaseRoutes = require("./routes/purchaseRoutes");
 
 const app = express();
 
@@ -37,6 +39,8 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/software", softwareRoutes);
+app.use("/api/vendor-documents",vendorDocumentRoutes);
+app.use("/api/purchases",purchaseRoutes);
 
 // Temporary Test Route
 app.post("/test", (req, res) => {
