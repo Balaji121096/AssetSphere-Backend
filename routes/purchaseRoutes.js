@@ -11,6 +11,10 @@ const verifyToken =
 const authorizeRole =
     require("../middleware/roleMiddleware");
 
+const {
+    uploadPurchaseDocument
+} = require("../middleware/uploadMiddleware");
+
 
 // =====================================================
 // GET PURCHASE SUMMARY
@@ -18,9 +22,71 @@ const authorizeRole =
 
 router.get(
     "/summary",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     purchaseController.getPurchaseSummary
+);
+
+
+// =====================================================
+// UPLOAD / REPLACE PURCHASE DOCUMENT
+// =====================================================
+
+router.post(
+    "/:id/document/:type",
+
+    verifyToken,
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
+    uploadPurchaseDocument.single("file"),
+
+    purchaseController.uploadPurchaseDocument
+);
+
+
+// =====================================================
+// VIEW / DOWNLOAD PURCHASE DOCUMENT
+// =====================================================
+
+router.get(
+    "/:id/document/:type",
+
+    verifyToken,
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
+    purchaseController.getPurchaseDocument
+);
+
+
+// =====================================================
+// DELETE PURCHASE DOCUMENT
+// =====================================================
+
+router.delete(
+    "/:id/document/:type",
+
+    verifyToken,
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
+    purchaseController.deletePurchaseDocument
 );
 
 
@@ -30,8 +96,14 @@ router.get(
 
 router.get(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     purchaseController.getPurchases
 );
 
@@ -42,8 +114,14 @@ router.get(
 
 router.get(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     purchaseController.getPurchaseById
 );
 
@@ -54,8 +132,14 @@ router.get(
 
 router.post(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     purchaseController.addPurchase
 );
 
@@ -66,8 +150,14 @@ router.post(
 
 router.put(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     purchaseController.updatePurchase
 );
 
@@ -78,8 +168,13 @@ router.put(
 
 router.delete(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin"),
+
+    authorizeRole(
+        "Admin"
+    ),
+
     purchaseController.deletePurchase
 );
 

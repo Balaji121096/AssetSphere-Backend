@@ -23,6 +23,9 @@ const getAllPurchases = async () => {
             p.warranty_expiry,
             p.remarks,
 
+            p.po_document,
+            p.invoice_document,
+
             p.created_at,
             p.updated_at
 
@@ -61,6 +64,9 @@ const getPurchaseById = async (purchaseId) => {
             p.payment_status,
             p.warranty_expiry,
             p.remarks,
+
+            p.po_document,
+            p.invoice_document,
 
             p.created_at,
             p.updated_at
@@ -179,6 +185,98 @@ const deletePurchase = async (purchaseId) => {
 
 
 // =====================================================
+// GET DOCUMENT
+// =====================================================
+
+const getPurchaseDocument = async (
+    purchaseId,
+    documentType
+) => {
+
+    const column =
+        documentType === "po"
+            ? "po_document"
+            : "invoice_document";
+
+
+    const [rows] = await db.query(
+        `
+        SELECT
+            ${column} AS document
+        FROM purchase_orders
+        WHERE purchase_id = ?
+        LIMIT 1
+        `,
+        [purchaseId]
+    );
+
+    return rows;
+};
+
+
+// =====================================================
+// UPDATE DOCUMENT
+// =====================================================
+
+const updatePurchaseDocument = async (
+    purchaseId,
+    documentType,
+    documentPath
+) => {
+
+    const column =
+        documentType === "po"
+            ? "po_document"
+            : "invoice_document";
+
+
+    const [result] = await db.query(
+        `
+        UPDATE purchase_orders
+        SET
+            ${column} = ?
+        WHERE purchase_id = ?
+        `,
+        [
+            documentPath,
+            purchaseId
+        ]
+    );
+
+    return result;
+};
+
+
+// =====================================================
+// DELETE DOCUMENT
+// =====================================================
+
+const deletePurchaseDocument = async (
+    purchaseId,
+    documentType
+) => {
+
+    const column =
+        documentType === "po"
+            ? "po_document"
+            : "invoice_document";
+
+
+    const [result] = await db.query(
+        `
+        UPDATE purchase_orders
+        SET
+            ${column} = NULL
+        WHERE purchase_id = ?
+        `,
+        [purchaseId]
+    );
+
+    return result;
+};
+
+
+// =====================================================
 // PURCHASE SUMMARY
 // =====================================================
 
@@ -214,26 +312,49 @@ const getPurchaseSummary = async () => {
     `);
 
     return {
+
         total_purchases:
-            Number(summary.total_purchases || 0),
+            Number(
+                summary.total_purchases || 0
+            ),
 
         total_purchase_amount:
-            Number(summary.total_purchase_amount || 0),
+            Number(
+                summary.total_purchase_amount || 0
+            ),
 
         pending_payments:
-            Number(summary.pending_payments || 0),
+            Number(
+                summary.pending_payments || 0
+            ),
 
         paid_purchases:
-            Number(summary.paid_purchases || 0)
+            Number(
+                summary.paid_purchases || 0
+            )
+
     };
 };
 
 
 module.exports = {
+
     getAllPurchases,
+
     getPurchaseById,
+
     addPurchase,
+
     updatePurchase,
+
     deletePurchase,
+
+    getPurchaseDocument,
+
+    updatePurchaseDocument,
+
+    deletePurchaseDocument,
+
     getPurchaseSummary
+
 };
