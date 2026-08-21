@@ -1,6 +1,9 @@
 const db = require("../config/db");
 
-// GET All Assets
+// =====================================================
+// GET ALL ASSETS
+// =====================================================
+
 const getAllAssets = async () => {
 
     const [rows] = await db.query(`
@@ -12,15 +15,19 @@ const getAllAssets = async () => {
             h.model,
             h.serial_number,
 
+            h.category_id,
+            h.vendor_id,
+            h.location_id,
+            h.current_employee_id,
+
             c.category_name,
-
             e.display_name,
-
             v.vendor_name,
-
             l.location_name,
 
-            h.asset_status
+            h.asset_status,
+            h.assigned_date,
+            h.returned_date
 
         FROM hardware_assets h
 
@@ -42,7 +49,61 @@ const getAllAssets = async () => {
     return rows;
 };
 
-// ADD Asset
+
+// =====================================================
+// GET ASSET BY ID
+// =====================================================
+
+const getAssetById = async (id) => {
+
+    const [rows] = await db.query(`
+        SELECT
+            h.asset_id,
+            h.asset_code,
+            h.asset_name,
+            h.brand,
+            h.model,
+            h.serial_number,
+
+            h.category_id,
+            h.vendor_id,
+            h.location_id,
+            h.current_employee_id,
+
+            c.category_name,
+            e.display_name,
+            v.vendor_name,
+            l.location_name,
+
+            h.asset_status,
+            h.assigned_date,
+            h.returned_date
+
+        FROM hardware_assets h
+
+        LEFT JOIN asset_categories c
+            ON h.category_id = c.category_id
+
+        LEFT JOIN employees e
+            ON h.current_employee_id = e.employee_id
+
+        LEFT JOIN vendors v
+            ON h.vendor_id = v.vendor_id
+
+        LEFT JOIN office_locations l
+            ON h.location_id = l.location_id
+
+        WHERE h.asset_id = ?
+    `, [id]);
+
+    return rows[0];
+};
+
+
+// =====================================================
+// ADD ASSET
+// =====================================================
+
 const addAsset = async (asset) => {
 
     const [result] = await db.query(`
@@ -68,57 +129,105 @@ const addAsset = async (asset) => {
         asset.serial_number,
         asset.vendor_id,
         asset.location_id,
-        asset.asset_status
+        asset.asset_status || "In Stock"
     ]);
 
     return result;
 };
 
-// UPDATE Asset
+
+// =====================================================
+// UPDATE ASSET
+// =====================================================
+
 const updateAsset = async (id, asset) => {
 
     const [result] = await db.query(`
         UPDATE hardware_assets
         SET
-            asset_code=?,
-            category_id=?,
-            asset_name=?,
-            brand=?,
-            model=?,
-            serial_number=?,
-            vendor_id=?,
-            location_id=?,
-            asset_status=?
-        WHERE asset_id=?
+            asset_code = ?,
+            category_id = ?,
+            asset_name = ?,
+            brand = ?,
+            model = ?,
+            serial_number = ?,
+            vendor_id = ?,
+            location_id = ?,
+            asset_status = ?
+        WHERE asset_id = ?
     `, [
         asset.asset_code,
-        asset.category_id,
+        asset.category_id || null,
         asset.asset_name,
-        asset.brand,
-        asset.model,
-        asset.serial_number,
-        asset.vendor_id,
-        asset.location_id,
-        asset.asset_status,
+        asset.brand || null,
+        asset.model || null,
+        asset.serial_number || null,
+        asset.vendor_id || null,
+        asset.location_id || null,
+        asset.asset_status || "In Stock",
         id
     ]);
 
     return result;
 };
 
-// SCRAP Asset (Soft Delete)
-const scrapAsset = async (id) => {
+
+// =====================================================
+// DELETE ASSET
+// =====================================================
+
+const deleteAsset = async (id) => {
 
     const [result] = await db.query(`
-        UPDATE hardware_assets
-        SET asset_status='Scrap'
-        WHERE asset_id=?
+        DELETE FROM hardware_assets
+        WHERE asset_id = ?
     `, [id]);
 
     return result;
 };
 
-// ASSIGN Asset
+
+// =====================================================
+// CHANGE STATUS
+// =====================================================
+
+const updateAssetStatus = async (id, status) => {
+
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET asset_status = ?
+        WHERE asset_id = ?
+    `, [
+        status,
+        id
+    ]);
+
+    return result;
+};
+
+
+// =====================================================
+// SCRAP ASSET
+// =====================================================
+
+const scrapAsset = async (id) => {
+
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            asset_status = 'Scrap',
+            current_employee_id = NULL
+        WHERE asset_id = ?
+    `, [id]);
+
+    return result;
+};
+
+
+// =====================================================
+// ASSIGN ASSET
+// =====================================================
+
 const assignAsset = async (assetId, employeeId) => {
 
     const [result] = await db.query(`
@@ -129,10 +238,18 @@ const assignAsset = async (assetId, employeeId) => {
             returned_date = NULL,
             asset_status = 'Assigned'
         WHERE asset_id = ?
-    `, [employeeId, assetId]);
+    `, [
+        employeeId,
+        assetId
+    ]);
 
     return result;
 };
+
+
+// =====================================================
+// RETURN ASSET
+// =====================================================
 
 const returnAsset = async (assetId) => {
 
@@ -147,6 +264,11 @@ const returnAsset = async (assetId) => {
 
     return result;
 };
+
+
+// =====================================================
+// ASSET HISTORY
+// =====================================================
 
 const addAssetHistory = async (
     assetId,
@@ -171,13 +293,16 @@ const addAssetHistory = async (
         actionType,
         remarks
     ]);
-
 };
+
 
 module.exports = {
     getAllAssets,
+    getAssetById,
     addAsset,
     updateAsset,
+    deleteAsset,
+    updateAssetStatus,
     scrapAsset,
     assignAsset,
     returnAsset,

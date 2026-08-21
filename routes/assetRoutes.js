@@ -1,12 +1,21 @@
 const express = require("express");
+
 const router = express.Router();
 
-const assetController = require("../controllers/assetController");
+const assetController =
+    require("../controllers/assetController");
 
-const verifyToken = require("../middleware/authMiddleware");
-const authorizeRole = require("../middleware/roleMiddleware");
+const verifyToken =
+    require("../middleware/authMiddleware");
 
-// GET All Assets
+const authorizeRole =
+    require("../middleware/roleMiddleware");
+
+
+// =====================================================
+// GET ALL
+// =====================================================
+
 router.get(
     "/",
     verifyToken,
@@ -14,7 +23,11 @@ router.get(
     assetController.getAssets
 );
 
-// ADD Asset
+
+// =====================================================
+// ADD
+// =====================================================
+
 router.post(
     "/",
     verifyToken,
@@ -22,7 +35,23 @@ router.post(
     assetController.addAsset
 );
 
+
+// =====================================================
+// GET ONE
+// =====================================================
+
+router.get(
+    "/:id",
+    verifyToken,
+    authorizeRole("Admin", "IT"),
+    assetController.getAssetById
+);
+
+
+// =====================================================
 // ASSIGN
+// =====================================================
+
 router.put(
     "/assign/:id",
     verifyToken,
@@ -30,7 +59,11 @@ router.put(
     assetController.assignAsset
 );
 
+
+// =====================================================
 // RETURN
+// =====================================================
+
 router.put(
     "/return/:id",
     verifyToken,
@@ -38,7 +71,11 @@ router.put(
     assetController.returnAsset
 );
 
+
+// =====================================================
 // SCRAP
+// =====================================================
+
 router.put(
     "/scrap/:id",
     verifyToken,
@@ -46,12 +83,41 @@ router.put(
     assetController.scrapAsset
 );
 
-// UPDATE (LAST)
+
+// =====================================================
+// STATUS CHANGE
+// =====================================================
+
+router.put(
+    "/status/:id",
+    verifyToken,
+    authorizeRole("Admin", "IT"),
+    assetController.updateAssetStatus
+);
+
+
+// =====================================================
+// UPDATE
+// =====================================================
+
 router.put(
     "/:id",
     verifyToken,
     authorizeRole("Admin", "IT"),
     assetController.updateAsset
 );
+
+
+// =====================================================
+// DELETE
+// =====================================================
+
+router.delete(
+    "/:id",
+    verifyToken,
+    authorizeRole("Admin", "IT"),
+    assetController.deleteAsset
+);
+
 
 module.exports = router;

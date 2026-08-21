@@ -2,21 +2,54 @@ const reportModel = require("../models/reportModel");
 
 
 // =====================================================
-// ALL ASSETS REPORT
+// BUILD FILTERS
+// =====================================================
+
+const getFilters = (req) => {
+
+    return {
+        from_date:
+            req.query.from_date || null,
+
+        to_date:
+            req.query.to_date || null,
+
+        status:
+            req.query.status || null,
+
+        category_id:
+            req.query.category_id || null,
+
+        employee_id:
+            req.query.employee_id || null,
+
+        department_id:
+            req.query.department_id || null,
+
+        location_id:
+            req.query.location_id || null,
+
+        vendor_id:
+            req.query.vendor_id || null,
+
+        search:
+            req.query.search || null
+    };
+};
+
+
+// =====================================================
+// ALL ASSETS
 // =====================================================
 
 const getAllAssets = async (req, res) => {
 
     try {
 
-        const filters = {
-            status: req.query.status || null,
-            category_id: req.query.category_id || null,
-            employee_id: req.query.employee_id || null,
-            search: req.query.search || null
-        };
+        const filters = getFilters(req);
 
-        const data = await reportModel.getAssetReport(filters);
+        const data =
+            await reportModel.getAssetReport(filters);
 
         res.json({
             success: true,
@@ -26,28 +59,33 @@ const getAllAssets = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get All Assets Report Error:", error);
+        console.error(
+            "Get All Assets Report Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
 // =====================================================
-// ASSET REPORT SUMMARY
+// SUMMARY
 // =====================================================
 
 const getAssetReportSummary = async (req, res) => {
 
     try {
 
+        const filters = getFilters(req);
+
         const summary =
-            await reportModel.getAssetReportSummary();
+            await reportModel.getAssetReportSummary(
+                filters
+            );
 
         res.json({
             success: true,
@@ -56,28 +94,33 @@ const getAssetReportSummary = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get Asset Report Summary Error:", error);
+        console.error(
+            "Get Asset Report Summary Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
 // =====================================================
-// ASSIGNED ASSETS REPORT
+// ASSIGNED
 // =====================================================
 
 const getAssignedAssets = async (req, res) => {
 
     try {
 
+        const filters = getFilters(req);
+
+        filters.status = "Assigned";
+
         const data =
-            await reportModel.getAssignedAssets();
+            await reportModel.getAssetReport(filters);
 
         res.json({
             success: true,
@@ -87,28 +130,33 @@ const getAssignedAssets = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get Assigned Assets Report Error:", error);
+        console.error(
+            "Get Assigned Assets Report Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
 // =====================================================
-// SCRAP ASSETS REPORT
+// SCRAP
 // =====================================================
 
 const getScrapAssets = async (req, res) => {
 
     try {
 
+        const filters = getFilters(req);
+
+        filters.status = "Scrap";
+
         const data =
-            await reportModel.getScrapAssets();
+            await reportModel.getAssetReport(filters);
 
         res.json({
             success: true,
@@ -118,28 +166,33 @@ const getScrapAssets = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get Scrap Assets Report Error:", error);
+        console.error(
+            "Get Scrap Assets Report Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
 // =====================================================
-// REPAIR ASSETS REPORT
+// REPAIR
 // =====================================================
 
 const getRepairAssets = async (req, res) => {
 
     try {
 
+        const filters = getFilters(req);
+
+        filters.status = "Repair";
+
         const data =
-            await reportModel.getRepairAssets();
+            await reportModel.getAssetReport(filters);
 
         res.json({
             success: true,
@@ -149,28 +202,69 @@ const getRepairAssets = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get Repair Assets Report Error:", error);
+        console.error(
+            "Get Repair Assets Report Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
 // =====================================================
-// EMPLOYEE ASSETS REPORT
+// LOST
+// =====================================================
+
+const getLostAssets = async (req, res) => {
+
+    try {
+
+        const filters = getFilters(req);
+
+        filters.status = "Lost";
+
+        const data =
+            await reportModel.getAssetReport(filters);
+
+        res.json({
+            success: true,
+            count: data.length,
+            data
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Lost Assets Report Error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+
+// =====================================================
+// EMPLOYEE ASSETS
 // =====================================================
 
 const getEmployeeAssets = async (req, res) => {
 
     try {
 
+        const filters = getFilters(req);
+
         const data =
-            await reportModel.getEmployeeAssets();
+            await reportModel.getEmployeeAssets(
+                filters
+            );
 
         res.json({
             success: true,
@@ -180,15 +274,16 @@ const getEmployeeAssets = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get Employee Assets Report Error:", error);
+        console.error(
+            "Get Employee Assets Report Error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
-
 };
 
 
@@ -199,10 +294,17 @@ const getEmployeeAssets = async (req, res) => {
 module.exports = {
 
     getAllAssets,
+
     getAssetReportSummary,
+
     getAssignedAssets,
+
     getScrapAssets,
+
     getRepairAssets,
+
+    getLostAssets,
+
     getEmployeeAssets
 
 };

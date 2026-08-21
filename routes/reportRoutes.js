@@ -5,11 +5,12 @@ const router = express.Router();
 const reportController = require("../controllers/reportController");
 
 const verifyToken = require("../middleware/authMiddleware");
+
 const authorizeRole = require("../middleware/roleMiddleware");
 
 
 // =====================================================
-// ASSET REPORT SUMMARY
+// ASSET SUMMARY
 // =====================================================
 
 router.get(
@@ -65,6 +66,18 @@ router.get(
     verifyToken,
     authorizeRole("Admin", "IT"),
     reportController.getRepairAssets
+);
+
+
+// =====================================================
+// LOST ASSETS
+// =====================================================
+
+router.get(
+    "/lost",
+    verifyToken,
+    authorizeRole("Admin", "IT"),
+    reportController.getLostAssets
 );
 
 
