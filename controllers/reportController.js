@@ -8,6 +8,7 @@ const reportModel = require("../models/reportModel");
 const getFilters = (req) => {
 
     return {
+
         from_date:
             req.query.from_date || null,
 
@@ -52,9 +53,13 @@ const getAllAssets = async (req, res) => {
             await reportModel.getAssetReport(filters);
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -65,9 +70,13 @@ const getAllAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -88,8 +97,11 @@ const getAssetReportSummary = async (req, res) => {
             );
 
         res.json({
+
             success: true,
+
             data: summary
+
         });
 
     } catch (error) {
@@ -100,9 +112,13 @@ const getAssetReportSummary = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -123,9 +139,13 @@ const getAssignedAssets = async (req, res) => {
             await reportModel.getAssetReport(filters);
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -136,9 +156,13 @@ const getAssignedAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -159,9 +183,13 @@ const getScrapAssets = async (req, res) => {
             await reportModel.getAssetReport(filters);
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -172,9 +200,13 @@ const getScrapAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -195,9 +227,13 @@ const getRepairAssets = async (req, res) => {
             await reportModel.getAssetReport(filters);
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -208,9 +244,13 @@ const getRepairAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -231,9 +271,13 @@ const getLostAssets = async (req, res) => {
             await reportModel.getAssetReport(filters);
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -244,9 +288,13 @@ const getLostAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
     }
 };
 
@@ -267,9 +315,13 @@ const getEmployeeAssets = async (req, res) => {
             );
 
         res.json({
+
             success: true,
+
             count: data.length,
+
             data
+
         });
 
     } catch (error) {
@@ -280,9 +332,57 @@ const getEmployeeAssets = async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Internal Server Error"
+
         });
+
+    }
+};
+
+
+// =====================================================
+// PURCHASE REPORT
+// =====================================================
+
+const getPurchaseReport = async (req, res) => {
+
+    try {
+
+        const filters = getFilters(req);
+
+        const data =
+            await reportModel.getPurchaseReport(
+                filters
+            );
+
+        res.json({
+
+            success: true,
+
+            count: data.length,
+
+            data
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get Purchase Report Error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error"
+
+        });
+
     }
 };
 
@@ -305,6 +405,8 @@ module.exports = {
 
     getLostAssets,
 
-    getEmployeeAssets
+    getEmployeeAssets,
+
+    getPurchaseReport
 
 };

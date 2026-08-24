@@ -2,11 +2,14 @@ const express = require("express");
 
 const router = express.Router();
 
-const reportController = require("../controllers/reportController");
+const reportController =
+    require("../controllers/reportController");
 
-const verifyToken = require("../middleware/authMiddleware");
+const verifyToken =
+    require("../middleware/authMiddleware");
 
-const authorizeRole = require("../middleware/roleMiddleware");
+const authorizeRole =
+    require("../middleware/roleMiddleware");
 
 
 // =====================================================
@@ -14,10 +17,15 @@ const authorizeRole = require("../middleware/roleMiddleware");
 // =====================================================
 
 router.get(
+
     "/assets/summary",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getAssetReportSummary
+
 );
 
 
@@ -26,10 +34,15 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/assets",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getAllAssets
+
 );
 
 
@@ -38,10 +51,15 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/assigned",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getAssignedAssets
+
 );
 
 
@@ -50,10 +68,15 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/scrap",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getScrapAssets
+
 );
 
 
@@ -62,10 +85,15 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/repair",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getRepairAssets
+
 );
 
 
@@ -74,10 +102,15 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/lost",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getLostAssets
+
 );
 
 
@@ -86,11 +119,37 @@ router.get(
 // =====================================================
 
 router.get(
+
     "/employee-assets",
+
     verifyToken,
+
     authorizeRole("Admin", "IT"),
+
     reportController.getEmployeeAssets
+
 );
 
+
+// =====================================================
+// PURCHASE REPORT
+// =====================================================
+
+router.get(
+
+    "/purchases",
+
+    verifyToken,
+
+    authorizeRole("Admin", "IT"),
+
+    reportController.getPurchaseReport
+
+);
+
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = router;
