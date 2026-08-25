@@ -372,7 +372,7 @@ const uploadPurchaseDocument = async (
         // CHECK FILE
         // -------------------------------------------------
 
-        if (!req.file) {
+        if (!req.files || req.files.length === 0) {
 
             return res.status(400).json({
                 success: false,
@@ -398,7 +398,7 @@ const uploadPurchaseDocument = async (
             // Uploaded file belongs to no purchase,
             // so remove it.
             deletePhysicalFile(
-                req.file.path
+                req.files[0].path
             );
 
             return res.status(404).json({

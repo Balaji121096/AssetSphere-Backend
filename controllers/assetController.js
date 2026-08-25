@@ -107,17 +107,49 @@ const addAsset = async (req, res) => {
 
 
 // =====================================================
-// UPDATE ASSET
+// UPDATE Asset
 // =====================================================
 
 const updateAsset = async (req, res) => {
 
     try {
 
+        const {
+            asset_status,
+            current_employee_id
+        } = req.body;
+
+        let employeeId = current_employee_id || null;
+
+        // Assigned asset must have employee
+        if (asset_status === "Assigned" && !employeeId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Assigned asset must have an employee"
+            });
+
+        }
+
+        // Other statuses don't need employee
+        if (
+            asset_status === "In Stock" ||
+            asset_status === "Repair" ||
+            asset_status === "Scrap" ||
+            asset_status === "Lost"
+        ) {
+            employeeId = null;
+        }
+
+        const updatedAsset = {
+            ...req.body,
+            current_employee_id: employeeId
+        };
+
         const result =
             await assetModel.updateAsset(
                 req.params.id,
-                req.body
+                updatedAsset
             );
 
         if (result.affectedRows === 0) {
@@ -128,6 +160,14 @@ const updateAsset = async (req, res) => {
             });
 
         }
+
+        // Add history
+        await assetModel.addAssetHistory(
+            req.params.id,
+            employeeId,
+            "Updated",
+            `Asset updated. Status: ${asset_status}`
+        );
 
         res.json({
             success: true,
@@ -144,9 +184,7 @@ const updateAsset = async (req, res) => {
         });
 
     }
-
 };
-
 
 // =====================================================
 // DELETE ASSET

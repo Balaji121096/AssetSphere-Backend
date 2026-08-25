@@ -137,7 +137,7 @@ const addAsset = async (asset) => {
 
 
 // =====================================================
-// UPDATE ASSET
+// UPDATE Asset
 // =====================================================
 
 const updateAsset = async (id, asset) => {
@@ -153,18 +153,34 @@ const updateAsset = async (id, asset) => {
             serial_number = ?,
             vendor_id = ?,
             location_id = ?,
-            asset_status = ?
+            current_employee_id = ?,
+            asset_status = ?,
+            assigned_date = CASE
+                WHEN ? IS NOT NULL AND asset_status != 'Assigned'
+                THEN CURDATE()
+                ELSE assigned_date
+            END,
+            returned_date = CASE
+                WHEN ? IS NULL
+                THEN CURDATE()
+                ELSE returned_date
+            END
         WHERE asset_id = ?
     `, [
         asset.asset_code,
-        asset.category_id || null,
+        asset.category_id,
         asset.asset_name,
-        asset.brand || null,
-        asset.model || null,
-        asset.serial_number || null,
-        asset.vendor_id || null,
-        asset.location_id || null,
-        asset.asset_status || "In Stock",
+        asset.brand,
+        asset.model,
+        asset.serial_number,
+        asset.vendor_id,
+        asset.location_id,
+        asset.current_employee_id || null,
+        asset.asset_status,
+
+        asset.current_employee_id || null,
+        asset.current_employee_id || null,
+
         id
     ]);
 
