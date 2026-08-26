@@ -26,6 +26,8 @@ router.get(
 // =====================================================
 // MY PROFILE - UPDATE
 // =====================================================
+// Username மட்டும் user update பண்ணலாம்.
+// Role / Status / Employee ID change இங்கே allowed இல்லை.
 
 router.put(
     "/profile",
@@ -47,8 +49,8 @@ router.put(
 
 // =====================================================
 // GET ALL USERS
-// ADMIN ONLY
 // =====================================================
+// Admin + Super Admin
 
 router.get(
     "/",
@@ -60,8 +62,8 @@ router.get(
 
 // =====================================================
 // GET USER BY ID
-// ADMIN ONLY
 // =====================================================
+// Admin + Super Admin
 
 router.get(
     "/:id",
@@ -73,39 +75,41 @@ router.get(
 
 // =====================================================
 // ADD USER
-// ADMIN ONLY
 // =====================================================
+// ONLY Super Admin
+// Account create + initial role assign
 
 router.post(
     "/",
     verifyToken,
-    authorizeRole("Admin"),
+    authorizeRole("Super Admin"),
     userController.addUser
 );
 
 
 // =====================================================
 // UPDATE USER
-// ADMIN ONLY
 // =====================================================
+// ONLY Super Admin
+// Role / Status / Employee / Username change
 
 router.put(
     "/:id",
     verifyToken,
-    authorizeRole("Admin"),
+    authorizeRole("Super Admin"),
     userController.updateUser
 );
 
 
 // =====================================================
 // DELETE USER
-// ADMIN ONLY
 // =====================================================
+// ONLY Super Admin
 
 router.delete(
     "/:id",
     verifyToken,
-    authorizeRole("Admin"),
+    authorizeRole("Super Admin"),
     userController.deleteUser
 );
 

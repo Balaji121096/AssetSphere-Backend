@@ -5,9 +5,9 @@ const db = require("../config/db");
 // GET ALL PURCHASES
 // =====================================================
 
-const getAllPurchases = async () => {
+const getAllPurchases = async (month = null) => {
 
-    const [rows] = await db.query(`
+    let query = `
         SELECT
             p.purchase_id,
             p.po_number,
@@ -17,14 +17,15 @@ const getAllPurchases = async () => {
             v.vendor_code,
             v.vendor_name,
 
+            p.product_category,
+            p.product_name,
+            p.product_description,
+
             p.purchase_date,
             p.amount,
             p.payment_status,
             p.warranty_expiry,
             p.remarks,
-
-            p.po_document,
-            p.invoice_document,
 
             p.created_at,
             p.updated_at
@@ -33,10 +34,31 @@ const getAllPurchases = async () => {
 
         LEFT JOIN vendors v
             ON p.vendor_id = v.vendor_id
+    `;
 
+    const params = [];
+
+    // month format: YYYY-MM
+    if (month) {
+        query += `
+            WHERE DATE_FORMAT(
+                p.purchase_date,
+                '%Y-%m'
+            ) = ?
+        `;
+
+        params.push(month);
+    }
+
+    query += `
         ORDER BY
-            p.purchase_id ASC
-    `);
+            p.purchase_id DESC
+    `;
+
+    const [rows] = await db.query(
+        query,
+        params
+    );
 
     return rows;
 };
@@ -59,14 +81,15 @@ const getPurchaseById = async (purchaseId) => {
             v.vendor_code,
             v.vendor_name,
 
+            p.product_category,
+            p.product_name,
+            p.product_description,
+
             p.purchase_date,
             p.amount,
             p.payment_status,
             p.warranty_expiry,
             p.remarks,
-
-            p.po_document,
-            p.invoice_document,
 
             p.created_at,
             p.updated_at
@@ -100,24 +123,50 @@ const addPurchase = async (purchase) => {
             po_number,
             invoice_number,
             vendor_id,
+
+            product_category,
+            product_name,
+            product_description,
+
             purchase_date,
             amount,
             payment_status,
             warranty_expiry,
             remarks
         )
+
         VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
             purchase.po_number,
-            purchase.invoice_number || null,
+
+            purchase.invoice_number ||
+            null,
+
             purchase.vendor_id,
+
+            purchase.product_category ||
+            null,
+
+            purchase.product_name ||
+            null,
+
+            purchase.product_description ||
+            null,
+
             purchase.purchase_date,
+
             purchase.amount || 0,
-            purchase.payment_status || "Pending",
-            purchase.warranty_expiry || null,
-            purchase.remarks || null
+
+            purchase.payment_status ||
+            "Pending",
+
+            purchase.warranty_expiry ||
+            null,
+
+            purchase.remarks ||
+            null
         ]
     );
 
@@ -137,27 +186,62 @@ const updatePurchase = async (
     const [result] = await db.query(
         `
         UPDATE purchase_orders
+
         SET
             po_number = ?,
+
             invoice_number = ?,
+
             vendor_id = ?,
+
+            product_category = ?,
+
+            product_name = ?,
+
+            product_description = ?,
+
             purchase_date = ?,
+
             amount = ?,
+
             payment_status = ?,
+
             warranty_expiry = ?,
+
             remarks = ?
 
         WHERE purchase_id = ?
         `,
         [
             purchase.po_number,
-            purchase.invoice_number || null,
+
+            purchase.invoice_number ||
+            null,
+
             purchase.vendor_id,
+
+            purchase.product_category ||
+            null,
+
+            purchase.product_name ||
+            null,
+
+            purchase.product_description ||
+            null,
+
             purchase.purchase_date,
+
             purchase.amount || 0,
-            purchase.payment_status || "Pending",
-            purchase.warranty_expiry || null,
-            purchase.remarks || null,
+
+            purchase.payment_status ||
+            "Pending",
+
+            purchase.warranty_expiry ||
+            null,
+
+            purchase.remarks ||
+            null,
+
             purchaseId
         ]
     );
@@ -170,103 +254,14 @@ const updatePurchase = async (
 // DELETE PURCHASE
 // =====================================================
 
-const deletePurchase = async (purchaseId) => {
+const deletePurchase = async (
+    purchaseId
+) => {
 
     const [result] = await db.query(
         `
         DELETE FROM purchase_orders
-        WHERE purchase_id = ?
-        `,
-        [purchaseId]
-    );
 
-    return result;
-};
-
-
-// =====================================================
-// GET DOCUMENT
-// =====================================================
-
-const getPurchaseDocument = async (
-    purchaseId,
-    documentType
-) => {
-
-    const column =
-        documentType === "po"
-            ? "po_document"
-            : "invoice_document";
-
-
-    const [rows] = await db.query(
-        `
-        SELECT
-            ${column} AS document
-        FROM purchase_orders
-        WHERE purchase_id = ?
-        LIMIT 1
-        `,
-        [purchaseId]
-    );
-
-    return rows;
-};
-
-
-// =====================================================
-// UPDATE DOCUMENT
-// =====================================================
-
-const updatePurchaseDocument = async (
-    purchaseId,
-    documentType,
-    documentPath
-) => {
-
-    const column =
-        documentType === "po"
-            ? "po_document"
-            : "invoice_document";
-
-
-    const [result] = await db.query(
-        `
-        UPDATE purchase_orders
-        SET
-            ${column} = ?
-        WHERE purchase_id = ?
-        `,
-        [
-            documentPath,
-            purchaseId
-        ]
-    );
-
-    return result;
-};
-
-
-// =====================================================
-// DELETE DOCUMENT
-// =====================================================
-
-const deletePurchaseDocument = async (
-    purchaseId,
-    documentType
-) => {
-
-    const column =
-        documentType === "po"
-            ? "po_document"
-            : "invoice_document";
-
-
-    const [result] = await db.query(
-        `
-        UPDATE purchase_orders
-        SET
-            ${column} = NULL
         WHERE purchase_id = ?
         `,
         [purchaseId]
@@ -280,9 +275,11 @@ const deletePurchaseDocument = async (
 // PURCHASE SUMMARY
 // =====================================================
 
-const getPurchaseSummary = async () => {
+const getPurchaseSummary = async (
+    month = null
+) => {
 
-    const [[summary]] = await db.query(`
+    let query = `
         SELECT
 
             COUNT(*) AS total_purchases,
@@ -309,10 +306,27 @@ const getPurchaseSummary = async () => {
             ) AS paid_purchases
 
         FROM purchase_orders
-    `);
+    `;
+
+    const params = [];
+
+    if (month) {
+        query += `
+            WHERE DATE_FORMAT(
+                purchase_date,
+                '%Y-%m'
+            ) = ?
+        `;
+
+        params.push(month);
+    }
+
+    const [[summary]] = await db.query(
+        query,
+        params
+    );
 
     return {
-
         total_purchases:
             Number(
                 summary.total_purchases || 0
@@ -332,7 +346,6 @@ const getPurchaseSummary = async () => {
             Number(
                 summary.paid_purchases || 0
             )
-
     };
 };
 
@@ -348,12 +361,6 @@ module.exports = {
     updatePurchase,
 
     deletePurchase,
-
-    getPurchaseDocument,
-
-    updatePurchaseDocument,
-
-    deletePurchaseDocument,
 
     getPurchaseSummary
 

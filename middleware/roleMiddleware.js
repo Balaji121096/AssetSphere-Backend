@@ -2,10 +2,7 @@ const authorizeRole = (...roles) => {
 
     return (req, res, next) => {
 
-        // =====================================================
-        // CHECK LOGIN USER
-        // =====================================================
-
+        // Login user check
         if (!req.user) {
 
             return res.status(401).json({
@@ -15,48 +12,31 @@ const authorizeRole = (...roles) => {
 
         }
 
-
-        // =====================================================
-        // GET USER ROLE
-        // =====================================================
-
+        // Logged-in user's role
         const userRole = req.user.role;
 
 
-        // =====================================================
-        // SUPER ADMIN
-        // =====================================================
-        // Super Admin has full access wherever Admin is allowed.
-        // =====================================================
-
-        if (
-            userRole === "Super Admin" &&
-            roles.includes("Admin")
-        ) {
+        // Super Admin-ku full access
+        if (userRole === "Super Admin") {
 
             return next();
 
         }
 
 
-        // =====================================================
-        // NORMAL ROLE CHECK
-        // =====================================================
-
+        // Requested role permission check
         if (!roles.includes(userRole)) {
 
             return res.status(403).json({
                 success: false,
-                message: "Access Denied"
+                message:
+                    "Access Denied. You do not have permission."
             });
 
         }
 
 
-        // =====================================================
-        // ACCESS GRANTED
-        // =====================================================
-
+        // Access allowed
         next();
 
     };
