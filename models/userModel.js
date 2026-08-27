@@ -143,29 +143,25 @@ const updateUser = async (userId, user) => {
 
 const updateProfile = async (
     userId,
-    username,
-    role
+    username
 ) => {
 
     const [result] = await db.query(
         `
         UPDATE users
         SET
-            username = ?,
-            role = ?
+            username = ?
 
         WHERE user_id = ?
         `,
         [
             username,
-            role,
             userId
         ]
     );
 
     return result;
 };
-
 
 // =====================================================
 // CHANGE PASSWORD

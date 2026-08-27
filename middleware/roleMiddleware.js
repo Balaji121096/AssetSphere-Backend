@@ -1,8 +1,15 @@
+// =====================================================
+// ROLE AUTHORIZATION MIDDLEWARE
+// =====================================================
+
 const authorizeRole = (...roles) => {
 
     return (req, res, next) => {
 
-        // Login user check
+        // =====================================================
+        // CHECK LOGIN
+        // =====================================================
+
         if (!req.user) {
 
             return res.status(401).json({
@@ -12,11 +19,34 @@ const authorizeRole = (...roles) => {
 
         }
 
-        // Logged-in user's role
+
+        // =====================================================
+        // GET LOGGED-IN USER ROLE
+        // =====================================================
+
         const userRole = req.user.role;
 
 
-        // Super Admin-ku full access
+        // =====================================================
+        // CHECK ROLE EXISTS
+        // =====================================================
+
+        if (!userRole) {
+
+            return res.status(403).json({
+                success: false,
+                message: "User role not found."
+            });
+
+        }
+
+
+        // =====================================================
+        // SUPER ADMIN
+        // =====================================================
+        // Super Admin-ku full system access
+        // =====================================================
+
         if (userRole === "Super Admin") {
 
             return next();
@@ -24,7 +54,17 @@ const authorizeRole = (...roles) => {
         }
 
 
-        // Requested role permission check
+        // =====================================================
+        // NORMAL ROLE CHECK
+        // =====================================================
+        // Example:
+        // authorizeRole("Admin")
+        //
+        // Admin -> allow
+        // Manager -> deny
+        // Viewer -> deny
+        // =====================================================
+
         if (!roles.includes(userRole)) {
 
             return res.status(403).json({
@@ -36,7 +76,10 @@ const authorizeRole = (...roles) => {
         }
 
 
-        // Access allowed
+        // =====================================================
+        // ACCESS GRANTED
+        // =====================================================
+
         next();
 
     };

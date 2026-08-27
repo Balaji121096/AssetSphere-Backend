@@ -15,6 +15,9 @@ const authorizeRole =
 // =====================================================
 // MY PROFILE - GET
 // =====================================================
+// Login pannina yaarum own profile paakalaam.
+// Super Admin / Admin / Manager / Viewer -> allowed
+// =====================================================
 
 router.get(
     "/profile",
@@ -26,8 +29,9 @@ router.get(
 // =====================================================
 // MY PROFILE - UPDATE
 // =====================================================
-// Username மட்டும் user update பண்ணலாம்.
-// Role / Status / Employee ID change இங்கே allowed இல்லை.
+// User thannoda profile information update pannalaam.
+// Role / Status / Employee ID inga change panna mudiyadhu.
+// =====================================================
 
 router.put(
     "/profile",
@@ -38,6 +42,8 @@ router.put(
 
 // =====================================================
 // CHANGE MY PASSWORD
+// =====================================================
+// Login pannina user thannoda password change pannalaam.
 // =====================================================
 
 router.put(
@@ -51,6 +57,12 @@ router.put(
 // GET ALL USERS
 // =====================================================
 // Admin + Super Admin
+//
+// Super Admin -> allowed
+// Admin       -> allowed
+// Manager     -> denied
+// Viewer      -> denied
+// =====================================================
 
 router.get(
     "/",
@@ -64,6 +76,7 @@ router.get(
 // GET USER BY ID
 // =====================================================
 // Admin + Super Admin
+// =====================================================
 
 router.get(
     "/:id",
@@ -76,13 +89,22 @@ router.get(
 // =====================================================
 // ADD USER
 // =====================================================
-// ONLY Super Admin
-// Account create + initial role assign
+// Admin + Super Admin
+//
+// Admin       -> can create users
+// Super Admin -> can create users
+// Manager     -> denied
+// Viewer      -> denied
+//
+// IMPORTANT:
+// Admin Super Admin role create panna koodadhu.
+// Adha controller-la next step-la protect pannuvom.
+// =====================================================
 
 router.post(
     "/",
     verifyToken,
-    authorizeRole("Super Admin"),
+    authorizeRole("Admin"),
     userController.addUser
 );
 
@@ -90,13 +112,18 @@ router.post(
 // =====================================================
 // UPDATE USER
 // =====================================================
-// ONLY Super Admin
-// Role / Status / Employee / Username change
+// Admin + Super Admin
+//
+// Normal users -> can update
+// Super Admin user -> Admin modify panna koodadhu
+//
+// Idha controller-la next step-la protect pannuvom.
+// =====================================================
 
 router.put(
     "/:id",
     verifyToken,
-    authorizeRole("Super Admin"),
+    authorizeRole("Admin"),
     userController.updateUser
 );
 
@@ -104,14 +131,24 @@ router.put(
 // =====================================================
 // DELETE USER
 // =====================================================
-// ONLY Super Admin
+// Admin + Super Admin
+//
+// Normal users -> can delete
+// Super Admin user -> delete panna koodadhu
+//
+// Idha controller-la next step-la protect pannuvom.
+// =====================================================
 
 router.delete(
     "/:id",
     verifyToken,
-    authorizeRole("Super Admin"),
+    authorizeRole("Admin"),
     userController.deleteUser
 );
 
+
+// =====================================================
+// EXPORT ROUTER
+// =====================================================
 
 module.exports = router;
