@@ -7,16 +7,20 @@ const fs = require("fs");
 // UPLOAD DIRECTORY
 // =====================================================
 
-const uploadDirectory = path.join(
-    __dirname,
-    "../uploads/warranty-documents"
+const uploadDir = path.join(
+    process.cwd(),
+    "uploads",
+    "purchases"
 );
 
 
-if (!fs.existsSync(uploadDirectory)) {
+// =====================================================
+// CREATE DIRECTORY IF NOT EXISTS
+// =====================================================
 
+if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(
-        uploadDirectory,
+        uploadDir,
         {
             recursive: true
         }
@@ -30,48 +34,41 @@ if (!fs.existsSync(uploadDirectory)) {
 
 const storage = multer.diskStorage({
 
-    destination: (
-        req,
-        file,
-        cb
-    ) => {
+    destination: (req, file, cb) => {
 
         cb(
             null,
-            uploadDirectory
+            uploadDir
         );
+
     },
 
+    filename: (req, file, cb) => {
 
-    filename: (
-        req,
-        file,
-        cb
-    ) => {
+        const purchaseId =
+            req.params.id;
+
+        const documentType =
+            req.params.type;
 
         const extension =
             path.extname(
                 file.originalname
             );
 
-        const name =
-            path.basename(
-                file.originalname,
-                extension
-            )
-            .replace(
-                /[^a-zA-Z0-9-_]/g,
-                "_"
-            );
+        const timestamp =
+            Date.now();
 
         const fileName =
-            `${Date.now()}-${name}${extension}`;
+            `${documentType}_${purchaseId}_${timestamp}${extension}`;
 
         cb(
             null,
             fileName
         );
+
     }
+
 });
 
 
@@ -90,34 +87,23 @@ const fileFilter = (
         "application/pdf",
 
         "image/jpeg",
-
         "image/png",
+        "image/webp",
 
-        "image/jpg"
+        "application/msword",
+
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+        "application/vnd.ms-excel",
+
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
     ];
-
-
-    const allowedExtensions = [
-
-        ".pdf",
-        ".jpg",
-        ".jpeg",
-        ".png"
-    ];
-
-
-    const extension =
-        path.extname(
-            file.originalname
-        ).toLowerCase();
 
 
     if (
         allowedMimeTypes.includes(
             file.mimetype
-        ) &&
-        allowedExtensions.includes(
-            extension
         )
     ) {
 
@@ -130,10 +116,12 @@ const fileFilter = (
 
         cb(
             new Error(
-                "Only PDF, JPG, JPEG and PNG files are allowed"
+                "Only PDF, image, Word and Excel files are allowed"
             )
         );
+
     }
+
 };
 
 
@@ -141,7 +129,7 @@ const fileFilter = (
 // MULTER
 // =====================================================
 
-const uploadWarrantyDocument =
+const uploadPurchaseDocument =
     multer({
 
         storage,
@@ -152,10 +140,16 @@ const uploadWarrantyDocument =
 
             fileSize:
                 10 * 1024 * 1024
+
         }
+
     });
 
 
+// =====================================================
+// EXPORT
+// =====================================================
+
 module.exports = {
-    uploadWarrantyDocument
+    uploadPurchaseDocument
 };

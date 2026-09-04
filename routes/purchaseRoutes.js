@@ -13,7 +13,8 @@ const authorizeRole =
 
 const {
     uploadPurchaseDocument
-} = require("../middleware/uploadMiddleware");
+} = require("../middleware/uploadPurchaseDocument");
+
 
 
 // =====================================================

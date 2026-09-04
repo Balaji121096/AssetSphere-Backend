@@ -52,7 +52,10 @@ const getPurchaseById = async (req, res) => {
                 req.params.id
             );
 
-        if (purchases.length === 0) {
+        if (
+            !purchases ||
+            purchases.length === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -97,9 +100,15 @@ const addPurchase = async (req, res) => {
             );
 
         res.status(201).json({
+
             success: true,
-            message: "Purchase added successfully",
-            purchase_id: result.insertId
+
+            message:
+                "Purchase added successfully",
+
+            purchase_id:
+                result.insertId
+
         });
 
     } catch (error) {
@@ -109,18 +118,29 @@ const addPurchase = async (req, res) => {
             error
         );
 
-        if (error.code === "ER_DUP_ENTRY") {
+        // Duplicate PO number
+        if (
+            error.code === "ER_DUP_ENTRY"
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "PO Number already exists"
+
+                message:
+                    "PO Number already exists"
+
             });
 
         }
 
         res.status(500).json({
+
             success: false,
-            message: "Internal Server Error"
+
+            message:
+                "Internal Server Error"
+
         });
 
     }
@@ -132,7 +152,10 @@ const addPurchase = async (req, res) => {
 // UPDATE PURCHASE
 // =====================================================
 
-const updatePurchase = async (req, res) => {
+const updatePurchase = async (
+    req,
+    res
+) => {
 
     try {
 
@@ -142,18 +165,30 @@ const updatePurchase = async (req, res) => {
                 req.body
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
 
+
         res.json({
+
             success: true,
-            message: "Purchase updated successfully"
+
+            message:
+                "Purchase updated successfully"
+
         });
 
     } catch (error) {
@@ -163,18 +198,31 @@ const updatePurchase = async (req, res) => {
             error
         );
 
-        if (error.code === "ER_DUP_ENTRY") {
+
+        // Duplicate PO number
+        if (
+            error.code === "ER_DUP_ENTRY"
+        ) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "PO Number already exists"
+
+                message:
+                    "PO Number already exists"
+
             });
 
         }
 
+
         res.status(500).json({
+
             success: false,
-            message: "Internal Server Error"
+
+            message:
+                "Internal Server Error"
+
         });
 
     }
@@ -186,7 +234,10 @@ const updatePurchase = async (req, res) => {
 // DELETE PURCHASE
 // =====================================================
 
-const deletePurchase = async (req, res) => {
+const deletePurchase = async (
+    req,
+    res
+) => {
 
     try {
 
@@ -195,7 +246,7 @@ const deletePurchase = async (req, res) => {
 
 
         // -------------------------------------------------
-        // GET EXISTING DOCUMENTS FIRST
+        // GET PURCHASE FIRST
         // -------------------------------------------------
 
         const purchases =
@@ -204,11 +255,18 @@ const deletePurchase = async (req, res) => {
             );
 
 
-        if (purchases.length === 0) {
+        if (
+            !purchases ||
+            purchases.length === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -219,7 +277,7 @@ const deletePurchase = async (req, res) => {
 
 
         // -------------------------------------------------
-        // DELETE PURCHASE FROM DATABASE
+        // DELETE DATABASE RECORD
         // -------------------------------------------------
 
         const result =
@@ -228,11 +286,17 @@ const deletePurchase = async (req, res) => {
             );
 
 
-        if (result.affectedRows === 0) {
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -242,7 +306,9 @@ const deletePurchase = async (req, res) => {
         // DELETE PO FILE
         // -------------------------------------------------
 
-        if (purchase.po_document) {
+        if (
+            purchase.po_document
+        ) {
 
             deletePhysicalFile(
                 purchase.po_document
@@ -255,7 +321,9 @@ const deletePurchase = async (req, res) => {
         // DELETE INVOICE FILE
         // -------------------------------------------------
 
-        if (purchase.invoice_document) {
+        if (
+            purchase.invoice_document
+        ) {
 
             deletePhysicalFile(
                 purchase.invoice_document
@@ -265,8 +333,12 @@ const deletePurchase = async (req, res) => {
 
 
         res.json({
+
             success: true,
-            message: "Purchase deleted successfully"
+
+            message:
+                "Purchase deleted successfully"
+
         });
 
     } catch (error) {
@@ -276,22 +348,49 @@ const deletePurchase = async (req, res) => {
             error
         );
 
+
+        // Foreign key reference
         if (
             error.code ===
             "ER_ROW_IS_REFERENCED_2"
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Purchase cannot be deleted because it is referenced by another record"
+
             });
 
         }
 
+
+        if (
+            error.code ===
+            "ER_ROW_IS_REFERENCED"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Purchase cannot be deleted because it is referenced by another record"
+
+            });
+
+        }
+
+
         res.status(500).json({
+
             success: false,
-            message: "Internal Server Error"
+
+            message:
+                "Internal Server Error"
+
         });
 
     }
@@ -303,16 +402,23 @@ const deletePurchase = async (req, res) => {
 // PURCHASE SUMMARY
 // =====================================================
 
-const getPurchaseSummary = async (req, res) => {
+const getPurchaseSummary = async (
+    req,
+    res
+) => {
 
     try {
 
         const summary =
             await purchaseModel.getPurchaseSummary();
 
+
         res.json({
+
             success: true,
+
             data: summary
+
         });
 
     } catch (error) {
@@ -322,9 +428,14 @@ const getPurchaseSummary = async (req, res) => {
             error
         );
 
+
         res.status(500).json({
+
             success: false,
-            message: "Internal Server Error"
+
+            message:
+                "Internal Server Error"
+
         });
 
     }
@@ -360,31 +471,41 @@ const uploadPurchaseDocument = async (
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Invalid document type. Use po or invoice"
+
             });
 
         }
 
 
         // -------------------------------------------------
-        // CHECK FILE
+        // CHECK UPLOADED FILE
         // -------------------------------------------------
 
-        if (!req.files || req.files.length === 0) {
+        // IMPORTANT:
+        // Route uses upload.single("file")
+        // So multer gives us req.file
+
+        if (!req.file) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Please upload a document"
+
             });
 
         }
 
 
         // -------------------------------------------------
-        // CHECK PURCHASE
+        // CHECK PURCHASE EXISTS
         // -------------------------------------------------
 
         const purchases =
@@ -393,17 +514,26 @@ const uploadPurchaseDocument = async (
             );
 
 
-        if (purchases.length === 0) {
+        if (
+            !purchases ||
+            purchases.length === 0
+        ) {
 
-            // Uploaded file belongs to no purchase,
-            // so remove it.
+            // Purchase doesn't exist.
+            // Delete newly uploaded file.
+
             deletePhysicalFile(
-                req.files[0].path
+                req.file.path
             );
 
+
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -425,6 +555,7 @@ const uploadPurchaseDocument = async (
 
 
         const oldDocument =
+            oldDocuments &&
             oldDocuments.length > 0
                 ? oldDocuments[0].document
                 : null;
@@ -450,17 +581,26 @@ const uploadPurchaseDocument = async (
             );
 
 
-        if (result.affectedRows === 0) {
+        // -------------------------------------------------
+        // DATABASE UPDATE FAILED
+        // -------------------------------------------------
 
-            // DB update failed.
-            // Remove newly uploaded file.
+        if (
+            result.affectedRows === 0
+        ) {
+
             deletePhysicalFile(
                 documentPath
             );
 
+
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -482,6 +622,10 @@ const uploadPurchaseDocument = async (
         }
 
 
+        // -------------------------------------------------
+        // SUCCESS
+        // -------------------------------------------------
+
         res.json({
 
             success: true,
@@ -491,7 +635,8 @@ const uploadPurchaseDocument = async (
                     ? "PO document uploaded successfully"
                     : "Invoice document uploaded successfully",
 
-            document: documentPath
+            document:
+                documentPath
 
         });
 
@@ -503,9 +648,14 @@ const uploadPurchaseDocument = async (
         );
 
 
-        // If something failed after multer uploaded
-        // the new file, remove it.
-        if (req.file?.path) {
+        // If multer uploaded the file
+        // but something failed later,
+        // delete that new file.
+
+        if (
+            req.file &&
+            req.file.path
+        ) {
 
             deletePhysicalFile(
                 req.file.path
@@ -515,9 +665,12 @@ const uploadPurchaseDocument = async (
 
 
         res.status(500).json({
+
             success: false,
+
             message:
                 "Failed to upload purchase document"
+
         });
 
     }
@@ -553,16 +706,19 @@ const getPurchaseDocument = async (
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Invalid document type. Use po or invoice"
+
             });
 
         }
 
 
         // -------------------------------------------------
-        // GET DOCUMENT
+        // GET DOCUMENT FROM DATABASE
         // -------------------------------------------------
 
         const rows =
@@ -572,11 +728,18 @@ const getPurchaseDocument = async (
             );
 
 
-        if (rows.length === 0) {
+        if (
+            !rows ||
+            rows.length === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -586,14 +749,21 @@ const getPurchaseDocument = async (
             rows[0].document;
 
 
+        // -------------------------------------------------
+        // DOCUMENT DOESN'T EXIST
+        // -------------------------------------------------
+
         if (!documentPath) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message:
                     documentType === "po"
                         ? "PO document not found"
                         : "Invoice document not found"
+
             });
 
         }
@@ -604,7 +774,9 @@ const getPurchaseDocument = async (
         // -------------------------------------------------
 
         const filePath =
-            path.isAbsolute(documentPath)
+            path.isAbsolute(
+                documentPath
+            )
                 ? documentPath
                 : path.resolve(
                     process.cwd(),
@@ -616,12 +788,19 @@ const getPurchaseDocument = async (
         // CHECK FILE EXISTS
         // -------------------------------------------------
 
-        if (!fs.existsSync(filePath)) {
+        if (
+            !fs.existsSync(
+                filePath
+            )
+        ) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message:
                     "Document file not found on server"
+
             });
 
         }
@@ -642,10 +821,14 @@ const getPurchaseDocument = async (
             error
         );
 
+
         res.status(500).json({
+
             success: false,
+
             message:
                 "Failed to retrieve document"
+
         });
 
     }
@@ -681,9 +864,12 @@ const deletePurchaseDocument = async (
         ) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message:
                     "Invalid document type. Use po or invoice"
+
             });
 
         }
@@ -700,11 +886,18 @@ const deletePurchaseDocument = async (
             );
 
 
-        if (rows.length === 0) {
+        if (
+            !rows ||
+            rows.length === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -714,19 +907,26 @@ const deletePurchaseDocument = async (
             rows[0].document;
 
 
+        // -------------------------------------------------
+        // DOCUMENT NOT FOUND
+        // -------------------------------------------------
+
         if (!documentPath) {
 
             return res.status(404).json({
+
                 success: false,
+
                 message:
                     "Document not found"
+
             });
 
         }
 
 
         // -------------------------------------------------
-        // DELETE FROM DATABASE
+        // DELETE DATABASE PATH
         // -------------------------------------------------
 
         const result =
@@ -736,11 +936,17 @@ const deletePurchaseDocument = async (
             );
 
 
-        if (result.affectedRows === 0) {
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
+
                 success: false,
-                message: "Purchase not found"
+
+                message:
+                    "Purchase not found"
+
             });
 
         }
@@ -754,6 +960,10 @@ const deletePurchaseDocument = async (
             documentPath
         );
 
+
+        // -------------------------------------------------
+        // SUCCESS
+        // -------------------------------------------------
 
         res.json({
 
@@ -773,10 +983,14 @@ const deletePurchaseDocument = async (
             error
         );
 
+
         res.status(500).json({
+
             success: false,
+
             message:
                 "Failed to delete document"
+
         });
 
     }

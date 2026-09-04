@@ -27,6 +27,9 @@ const getAllPurchases = async (month = null) => {
             p.warranty_expiry,
             p.remarks,
 
+            p.po_document,
+            p.invoice_document,
+
             p.created_at,
             p.updated_at
 
@@ -40,6 +43,7 @@ const getAllPurchases = async (month = null) => {
 
     // month format: YYYY-MM
     if (month) {
+
         query += `
             WHERE DATE_FORMAT(
                 p.purchase_date,
@@ -68,7 +72,9 @@ const getAllPurchases = async (month = null) => {
 // GET PURCHASE BY ID
 // =====================================================
 
-const getPurchaseById = async (purchaseId) => {
+const getPurchaseById = async (
+    purchaseId
+) => {
 
     const [rows] = await db.query(
         `
@@ -90,6 +96,9 @@ const getPurchaseById = async (purchaseId) => {
             p.payment_status,
             p.warranty_expiry,
             p.remarks,
+
+            p.po_document,
+            p.invoice_document,
 
             p.created_at,
             p.updated_at
@@ -114,7 +123,9 @@ const getPurchaseById = async (purchaseId) => {
 // ADD PURCHASE
 // =====================================================
 
-const addPurchase = async (purchase) => {
+const addPurchase = async (
+    purchase
+) => {
 
     const [result] = await db.query(
         `
@@ -139,6 +150,7 @@ const addPurchase = async (purchase) => {
         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
+
             purchase.po_number,
 
             purchase.invoice_number ||
@@ -157,7 +169,8 @@ const addPurchase = async (purchase) => {
 
             purchase.purchase_date,
 
-            purchase.amount || 0,
+            purchase.amount ||
+            0,
 
             purchase.payment_status ||
             "Pending",
@@ -167,6 +180,7 @@ const addPurchase = async (purchase) => {
 
             purchase.remarks ||
             null
+
         ]
     );
 
@@ -188,6 +202,7 @@ const updatePurchase = async (
         UPDATE purchase_orders
 
         SET
+
             po_number = ?,
 
             invoice_number = ?,
@@ -213,6 +228,7 @@ const updatePurchase = async (
         WHERE purchase_id = ?
         `,
         [
+
             purchase.po_number,
 
             purchase.invoice_number ||
@@ -231,7 +247,8 @@ const updatePurchase = async (
 
             purchase.purchase_date,
 
-            purchase.amount || 0,
+            purchase.amount ||
+            0,
 
             purchase.payment_status ||
             "Pending",
@@ -243,6 +260,7 @@ const updatePurchase = async (
             null,
 
             purchaseId
+
         ]
     );
 
@@ -311,6 +329,7 @@ const getPurchaseSummary = async (
     const params = [];
 
     if (month) {
+
         query += `
             WHERE DATE_FORMAT(
                 purchase_date,
@@ -321,34 +340,189 @@ const getPurchaseSummary = async (
         params.push(month);
     }
 
-    const [[summary]] = await db.query(
-        query,
-        params
-    );
+    const [[summary]] =
+        await db.query(
+            query,
+            params
+        );
 
     return {
+
         total_purchases:
             Number(
-                summary.total_purchases || 0
+                summary.total_purchases ||
+                0
             ),
 
         total_purchase_amount:
             Number(
-                summary.total_purchase_amount || 0
+                summary.total_purchase_amount ||
+                0
             ),
 
         pending_payments:
             Number(
-                summary.pending_payments || 0
+                summary.pending_payments ||
+                0
             ),
 
         paid_purchases:
             Number(
-                summary.paid_purchases || 0
+                summary.paid_purchases ||
+                0
             )
+
     };
 };
 
+
+// =====================================================
+// GET PURCHASE DOCUMENT
+// =====================================================
+
+const getPurchaseDocument = async (
+    purchaseId,
+    documentType
+) => {
+
+    let column;
+
+    if (documentType === "po") {
+
+        column = "po_document";
+
+    } else if (
+        documentType === "invoice"
+    ) {
+
+        column = "invoice_document";
+
+    } else {
+
+        throw new Error(
+            "Invalid document type"
+        );
+
+    }
+
+    const [rows] = await db.query(
+        `
+        SELECT
+
+            purchase_id,
+
+            ${column} AS document
+
+        FROM purchase_orders
+
+        WHERE purchase_id = ?
+
+        LIMIT 1
+        `,
+        [purchaseId]
+    );
+
+    return rows;
+};
+
+
+// =====================================================
+// UPDATE PURCHASE DOCUMENT
+// =====================================================
+
+const updatePurchaseDocument = async (
+    purchaseId,
+    documentType,
+    documentPath
+) => {
+
+    let column;
+
+    if (documentType === "po") {
+
+        column = "po_document";
+
+    } else if (
+        documentType === "invoice"
+    ) {
+
+        column = "invoice_document";
+
+    } else {
+
+        throw new Error(
+            "Invalid document type"
+        );
+
+    }
+
+    const [result] = await db.query(
+        `
+        UPDATE purchase_orders
+
+        SET
+            ${column} = ?
+
+        WHERE purchase_id = ?
+        `,
+        [
+            documentPath,
+            purchaseId
+        ]
+    );
+
+    return result;
+};
+
+
+// =====================================================
+// DELETE PURCHASE DOCUMENT
+// =====================================================
+
+const deletePurchaseDocument = async (
+    purchaseId,
+    documentType
+) => {
+
+    let column;
+
+    if (documentType === "po") {
+
+        column = "po_document";
+
+    } else if (
+        documentType === "invoice"
+    ) {
+
+        column = "invoice_document";
+
+    } else {
+
+        throw new Error(
+            "Invalid document type"
+        );
+
+    }
+
+    const [result] = await db.query(
+        `
+        UPDATE purchase_orders
+
+        SET
+            ${column} = NULL
+
+        WHERE purchase_id = ?
+        `,
+        [purchaseId]
+    );
+
+    return result;
+};
+
+
+// =====================================================
+// EXPORTS
+// =====================================================
 
 module.exports = {
 
@@ -362,6 +536,12 @@ module.exports = {
 
     deletePurchase,
 
-    getPurchaseSummary
+    getPurchaseSummary,
+
+    getPurchaseDocument,
+
+    updatePurchaseDocument,
+
+    deletePurchaseDocument
 
 };

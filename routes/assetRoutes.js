@@ -1,15 +1,24 @@
 const express = require("express");
 
-const router = express.Router();
+const router =
+    express.Router();
+
 
 const assetController =
     require("../controllers/assetController");
 
+
 const verifyToken =
     require("../middleware/authMiddleware");
 
+
 const authorizeRole =
     require("../middleware/roleMiddleware");
+
+
+const {
+    uploadWarrantyDocument
+} = require("../middleware/uploadMiddleware");
 
 
 // =====================================================
@@ -17,9 +26,16 @@ const authorizeRole =
 // =====================================================
 
 router.get(
+
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.getAssets
 );
 
@@ -29,9 +45,16 @@ router.get(
 // =====================================================
 
 router.post(
+
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.addAsset
 );
 
@@ -41,9 +64,16 @@ router.post(
 // =====================================================
 
 router.get(
+
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.getAssetById
 );
 
@@ -53,9 +83,16 @@ router.get(
 // =====================================================
 
 router.put(
+
     "/assign/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.assignAsset
 );
 
@@ -65,9 +102,16 @@ router.put(
 // =====================================================
 
 router.put(
+
     "/return/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.returnAsset
 );
 
@@ -77,9 +121,13 @@ router.put(
 // =====================================================
 
 router.put(
+
     "/scrap/:id",
+
     verifyToken,
+
     authorizeRole("Admin"),
+
     assetController.scrapAsset
 );
 
@@ -89,9 +137,16 @@ router.put(
 // =====================================================
 
 router.put(
+
     "/status/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.updateAssetStatus
 );
 
@@ -101,10 +156,40 @@ router.put(
 // =====================================================
 
 router.put(
+
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.updateAsset
+);
+
+
+// =====================================================
+// WARRANTY DOCUMENT UPLOAD
+// =====================================================
+
+router.post(
+
+    "/:id/warranty-document",
+
+    verifyToken,
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
+    uploadWarrantyDocument.single(
+        "warranty_document"
+    ),
+
+    assetController.uploadWarrantyDocument
 );
 
 
@@ -113,9 +198,16 @@ router.put(
 // =====================================================
 
 router.delete(
+
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "IT"
+    ),
+
     assetController.deleteAsset
 );
 
