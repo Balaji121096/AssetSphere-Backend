@@ -1,3 +1,7 @@
+// =====================================================
+// models/assetModel.js
+// =====================================================
+
 const db = require("../config/db");
 
 
@@ -5,9 +9,9 @@ const db = require("../config/db");
 // GET ALL ASSETS
 // =====================================================
 
-const getAllAssets = async () => {
+const getAllAssets = async (assetType = null) => {
 
-    const [rows] = await db.query(`
+    let query = `
         SELECT
             h.asset_id,
             h.asset_code,
@@ -52,6 +56,7 @@ const getAllAssets = async () => {
 
             h.current_employee_id,
             e.display_name,
+            e.employee_id,
 
             h.assigned_date,
             h.returned_date,
@@ -82,9 +87,26 @@ const getAllAssets = async () => {
 
         LEFT JOIN office_locations l
             ON h.location_id = l.location_id
+    `;
 
-        ORDER BY h.asset_code ASC
-    `);
+    const params = [];
+
+    if (
+        assetType &&
+        assetType !== "All" &&
+        assetType !== "all" &&
+        assetType !== "ALL"
+    ) {
+        query += ` WHERE h.asset_type = ? `;
+        params.push(assetType);
+    }
+
+    query += ` ORDER BY h.asset_code ASC `;
+
+    const [rows] = await db.query(
+        query,
+        params
+    );
 
     return rows;
 };
@@ -141,6 +163,7 @@ const getAssetById = async (id) => {
 
             h.current_employee_id,
             e.display_name,
+            e.employee_id,
 
             h.assigned_date,
             h.returned_date,
@@ -335,6 +358,9 @@ const updateAsset = async (id, asset) => {
             floor = ?,
 
             current_employee_id = ?,
+            assigned_date = ?,
+            returned_date = ?,
+
             asset_status = ?,
 
             remarks = ?
@@ -376,6 +402,9 @@ const updateAsset = async (id, asset) => {
         asset.floor || null,
 
         asset.current_employee_id || null,
+        asset.assigned_date || null,
+        asset.returned_date || null,
+
         asset.asset_status || "In Stock",
 
         asset.remarks || null,
@@ -436,16 +465,36 @@ const deleteAsset = async (id) => {
 
 const updateAssetStatus = async (id, status) => {
 
-    const [result] = await db.query(`
+    let query = `
         UPDATE hardware_assets
+        SET
+            asset_status = ?
+    `;
 
-        SET asset_status = ?
+    const params = [status];
 
+    if (
+        status === "In Stock" ||
+        status === "Repair" ||
+        status === "Scrap" ||
+        status === "Lost"
+    ) {
+        query += `,
+            current_employee_id = NULL,
+            returned_date = CURDATE()
+        `;
+    }
+
+    query += `
         WHERE asset_id = ?
-    `, [
-        status,
-        id
-    ]);
+    `;
+
+    params.push(id);
+
+    const [result] = await db.query(
+        query,
+        params
+    );
 
     return result;
 };
@@ -462,7 +511,8 @@ const scrapAsset = async (id) => {
 
         SET
             asset_status = 'Scrap',
-            current_employee_id = NULL
+            current_employee_id = NULL,
+            returned_date = CURDATE()
 
         WHERE asset_id = ?
     `, [id]);
@@ -552,6 +602,74 @@ const addAssetHistory = async (
 };
 
 
+// =====================================================
+// EXPORT DATA
+// =====================================================
+
+const getAssetsForExport = async (assetType = null) => {
+
+    let query = `
+        SELECT
+
+            h.asset_code,
+            h.asset_type,
+            h.model,
+
+            h.configuration_specs,
+
+            h.ram,
+            h.ram_capacity,
+
+            h.storage,
+            h.storage_spec,
+
+            e.display_name AS employee_name,
+            e.employee_id AS employee_id,
+
+            h.asset_status,
+
+            h.purchase_date,
+            h.warranty_expiry,
+
+            h.purchase_cost,
+
+            h.department
+
+        FROM hardware_assets h
+
+        LEFT JOIN employees e
+            ON h.current_employee_id = e.employee_id
+    `;
+
+    const params = [];
+
+    if (
+        assetType &&
+        assetType !== "All" &&
+        assetType !== "all" &&
+        assetType !== "ALL"
+    ) {
+
+        query += `
+            WHERE h.asset_type = ?
+        `;
+
+        params.push(assetType);
+    }
+
+    query += `
+        ORDER BY h.asset_code ASC
+    `;
+
+    const [rows] = await db.query(
+        query,
+        params
+    );
+
+    return rows;
+};
+
+
 module.exports = {
 
     getAllAssets,
@@ -570,5 +688,7 @@ module.exports = {
     assignAsset,
     returnAsset,
 
-    addAssetHistory
+    addAssetHistory,
+
+    getAssetsForExport
 };
