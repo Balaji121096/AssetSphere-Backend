@@ -15,9 +15,6 @@ const authorizeRole =
 // =====================================================
 // MY PROFILE - GET
 // =====================================================
-// Login pannina yaarum own profile paakalaam.
-// Super Admin / Admin / Manager / Viewer -> allowed
-// =====================================================
 
 router.get(
     "/profile",
@@ -28,9 +25,6 @@ router.get(
 
 // =====================================================
 // MY PROFILE - UPDATE
-// =====================================================
-// User thannoda profile information update pannalaam.
-// Role / Status / Employee ID inga change panna mudiyadhu.
 // =====================================================
 
 router.put(
@@ -43,8 +37,6 @@ router.put(
 // =====================================================
 // CHANGE MY PASSWORD
 // =====================================================
-// Login pannina user thannoda password change pannalaam.
-// =====================================================
 
 router.put(
     "/password",
@@ -55,13 +47,6 @@ router.put(
 
 // =====================================================
 // GET ALL USERS
-// =====================================================
-// Admin + Super Admin
-//
-// Super Admin -> allowed
-// Admin       -> allowed
-// Manager     -> denied
-// Viewer      -> denied
 // =====================================================
 
 router.get(
@@ -75,8 +60,6 @@ router.get(
 // =====================================================
 // GET USER BY ID
 // =====================================================
-// Admin + Super Admin
-// =====================================================
 
 router.get(
     "/:id",
@@ -88,17 +71,6 @@ router.get(
 
 // =====================================================
 // ADD USER
-// =====================================================
-// Admin + Super Admin
-//
-// Admin       -> can create users
-// Super Admin -> can create users
-// Manager     -> denied
-// Viewer      -> denied
-//
-// IMPORTANT:
-// Admin Super Admin role create panna koodadhu.
-// Adha controller-la next step-la protect pannuvom.
 // =====================================================
 
 router.post(
@@ -112,13 +84,6 @@ router.post(
 // =====================================================
 // UPDATE USER
 // =====================================================
-// Admin + Super Admin
-//
-// Normal users -> can update
-// Super Admin user -> Admin modify panna koodadhu
-//
-// Idha controller-la next step-la protect pannuvom.
-// =====================================================
 
 router.put(
     "/:id",
@@ -129,14 +94,20 @@ router.put(
 
 
 // =====================================================
-// DELETE USER
+// RESET USER PASSWORD
+// SUPER ADMIN ONLY
 // =====================================================
-// Admin + Super Admin
-//
-// Normal users -> can delete
-// Super Admin user -> delete panna koodadhu
-//
-// Idha controller-la next step-la protect pannuvom.
+
+router.put(
+    "/:id/reset-password",
+    verifyToken,
+    authorizeRole("Super Admin"),
+    userController.resetPassword
+);
+
+
+// =====================================================
+// DELETE USER
 // =====================================================
 
 router.delete(
@@ -146,9 +117,5 @@ router.delete(
     userController.deleteUser
 );
 
-
-// =====================================================
-// EXPORT ROUTER
-// =====================================================
 
 module.exports = router;

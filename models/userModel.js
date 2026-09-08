@@ -19,6 +19,7 @@ const getAllUsers = async () => {
             u.username,
             u.role,
             u.status,
+            u.must_change_password,
             u.created_at,
             u.updated_at
 
@@ -52,6 +53,7 @@ const getUserById = async (userId) => {
             u.username,
             u.role,
             u.status,
+            u.must_change_password,
             u.created_at,
             u.updated_at
 
@@ -68,6 +70,36 @@ const getUserById = async (userId) => {
     );
 
     return rows;
+};
+
+
+// =====================================================
+// GET USER BY USERNAME
+// =====================================================
+
+const getUserByUsername = async (username) => {
+
+    const [rows] = await db.query(
+        `
+        SELECT
+            user_id,
+            employee_id,
+            username,
+            password,
+            role,
+            status,
+            must_change_password
+
+        FROM users
+
+        WHERE username = ?
+
+        LIMIT 1
+        `,
+        [username]
+    );
+
+    return rows[0];
 };
 
 
@@ -90,16 +122,18 @@ const addUser = async (user) => {
             username,
             password,
             role,
-            status
+            status,
+            must_change_password
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
         `,
         [
             user.employee_id,
             user.username,
             hashedPassword,
             user.role || "Viewer",
-            user.status || "Active"
+            user.status || "Active",
+            0
         ]
     );
 
@@ -108,7 +142,7 @@ const addUser = async (user) => {
 
 
 // =====================================================
-// UPDATE USER - ADMIN
+// UPDATE USER
 // =====================================================
 
 const updateUser = async (userId, user) => {
@@ -163,6 +197,7 @@ const updateProfile = async (
     return result;
 };
 
+
 // =====================================================
 // CHANGE PASSWORD
 // =====================================================
@@ -181,7 +216,8 @@ const changePassword = async (
         `
         UPDATE users
         SET
-            password = ?
+            password = ?,
+            must_change_password = 0
 
         WHERE user_id = ?
         `,
@@ -216,6 +252,39 @@ const getUserPassword = async (userId) => {
     );
 
     return rows[0];
+};
+
+
+// =====================================================
+// RESET USER PASSWORD
+// =====================================================
+
+const resetUserPassword = async (
+    userId,
+    temporaryPassword
+) => {
+
+    const hashedPassword = await bcrypt.hash(
+        temporaryPassword,
+        10
+    );
+
+    const [result] = await db.query(
+        `
+        UPDATE users
+        SET
+            password = ?,
+            must_change_password = 1
+
+        WHERE user_id = ?
+        `,
+        [
+            hashedPassword,
+            userId
+        ]
+    );
+
+    return result;
 };
 
 
@@ -262,6 +331,7 @@ const getProfile = async (userId) => {
             u.username,
             u.role,
             u.status,
+            u.must_change_password,
             u.created_at,
             u.updated_at
 
@@ -289,11 +359,13 @@ module.exports = {
 
     getAllUsers,
     getUserById,
+    getUserByUsername,
     addUser,
     updateUser,
     updateProfile,
     changePassword,
     getUserPassword,
+    resetUserPassword,
     deleteUser,
     getProfile
 

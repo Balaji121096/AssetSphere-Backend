@@ -1,20 +1,17 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-
+const crypto = require("crypto");
 
 // =====================================================
 // GET ALL USERS
 // =====================================================
 
 const getUsers = async (req, res) => {
-
     try {
-
         const users = await userModel.getAllUsers();
 
         // Admin-ku Super Admin accounts show panna koodadhu
         if (req.user.role === "Admin") {
-
             const filteredUsers = users.filter(
                 user => user.role !== "Super Admin"
             );
@@ -34,7 +31,6 @@ const getUsers = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Get Users Error:", error);
 
         res.status(500).json({
@@ -50,15 +46,12 @@ const getUsers = async (req, res) => {
 // =====================================================
 
 const getUserById = async (req, res) => {
-
     try {
-
         const users = await userModel.getUserById(
             req.params.id
         );
 
         if (users.length === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
@@ -72,7 +65,6 @@ const getUserById = async (req, res) => {
             req.user.role === "Admin" &&
             targetUser.role === "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message: "Admin cannot access Super Admin account"
@@ -85,7 +77,6 @@ const getUserById = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Get User Error:", error);
 
         res.status(500).json({
@@ -101,9 +92,7 @@ const getUserById = async (req, res) => {
 // =====================================================
 
 const addUser = async (req, res) => {
-
     try {
-
         const {
             employee_id,
             username,
@@ -112,14 +101,12 @@ const addUser = async (req, res) => {
             status
         } = req.body;
 
-
         // Required fields
         if (
             !employee_id ||
             !username ||
             !password
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -127,10 +114,8 @@ const addUser = async (req, res) => {
             });
         }
 
-
         // Default role
         const newRole = role || "Viewer";
-
 
         // Allowed roles
         const allowedRoles = [
@@ -140,15 +125,12 @@ const addUser = async (req, res) => {
             "Viewer"
         ];
 
-
         if (!allowedRoles.includes(newRole)) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid role value"
             });
         }
-
 
         // =================================================
         // ADMIN RESTRICTIONS
@@ -159,64 +141,49 @@ const addUser = async (req, res) => {
             req.user.role === "Admin" &&
             newRole === "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message: "Admin cannot create Super Admin"
             });
         }
 
-
         // =================================================
         // ADD USER
         // =================================================
 
         const result = await userModel.addUser({
-
             employee_id,
             username,
             password,
             role: newRole,
             status: status || "Active"
-
         });
 
-
         res.status(201).json({
-
             success: true,
-
             message: "User added successfully",
-
             user_id: result.insertId
-
         });
 
     } catch (error) {
-
         console.error("Add User Error:", error);
 
-
         if (error.code === "ER_DUP_ENTRY") {
-
             return res.status(400).json({
                 success: false,
                 message: "Username already exists"
             });
         }
 
-
         if (
             error.code === "WARN_DATA_TRUNCATED" ||
             error.code === "ER_DATA_TOO_LONG"
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid role or status value"
             });
         }
-
 
         res.status(500).json({
             success: false,
@@ -231,11 +198,8 @@ const addUser = async (req, res) => {
 // =====================================================
 
 const updateUser = async (req, res) => {
-
     try {
-
         const userId = req.params.id;
-
 
         // =================================================
         // GET TARGET USER
@@ -244,18 +208,14 @@ const updateUser = async (req, res) => {
         const users =
             await userModel.getUserById(userId);
 
-
         if (users.length === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-
         const targetUser = users[0];
-
 
         // =================================================
         // ADMIN RESTRICTION
@@ -266,13 +226,11 @@ const updateUser = async (req, res) => {
             req.user.role === "Admin" &&
             targetUser.role === "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message: "Admin cannot update Super Admin account"
             });
         }
-
 
         // =================================================
         // REQUEST DATA
@@ -285,7 +243,6 @@ const updateUser = async (req, res) => {
             status
         } = req.body;
 
-
         // =================================================
         // ROLE VALIDATION
         // =================================================
@@ -297,19 +254,15 @@ const updateUser = async (req, res) => {
             "Viewer"
         ];
 
-
         const newRole =
             role || targetUser.role;
 
-
         if (!allowedRoles.includes(newRole)) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid role value"
             });
         }
-
 
         // =================================================
         // ADMIN CANNOT ASSIGN SUPER ADMIN
@@ -319,32 +272,26 @@ const updateUser = async (req, res) => {
             req.user.role === "Admin" &&
             newRole === "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message: "Admin cannot assign Super Admin role"
             });
         }
 
-
         // =================================================
         // SUPER ADMIN PROTECTION
         // =================================================
 
         // Existing Super Admin role remove panna koodadhu
-        // Super Admin account-a downgrade panna koodadhu
-
         if (
             targetUser.role === "Super Admin" &&
             newRole !== "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message: "Super Admin role cannot be removed"
             });
         }
-
 
         // =================================================
         // UPDATE
@@ -368,53 +315,41 @@ const updateUser = async (req, res) => {
                 }
             );
 
-
         if (result.affectedRows === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-
         res.json({
-
             success: true,
-
             message:
                 "User updated successfully"
-
         });
 
     } catch (error) {
-
         console.error(
             "Update User Error:",
             error
         );
 
-
         if (error.code === "ER_DUP_ENTRY") {
-
             return res.status(400).json({
                 success: false,
                 message: "Username already exists"
             });
         }
 
-
         if (
             error.code === "WARN_DATA_TRUNCATED" ||
             error.code === "ER_DATA_TOO_LONG"
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: "Invalid role or status value"
             });
         }
-
 
         res.status(500).json({
             success: false,
@@ -429,25 +364,19 @@ const updateUser = async (req, res) => {
 // =====================================================
 
 const updateProfile = async (req, res) => {
-
     try {
-
         if (!req.user || !req.user.user_id) {
-
             return res.status(401).json({
                 success: false,
                 message: "User authentication required"
             });
         }
 
-
         const userId = req.user.user_id;
-
 
         const {
             username
         } = req.body;
-
 
         // =================================================
         // USERNAME VALIDATION
@@ -458,17 +387,14 @@ const updateProfile = async (req, res) => {
             typeof username !== "string" ||
             !username.trim()
         ) {
-
             return res.status(400).json({
                 success: false,
                 message: "Username is required"
             });
         }
 
-
         const cleanUsername =
             username.trim();
-
 
         // =================================================
         // GET CURRENT PROFILE
@@ -477,22 +403,16 @@ const updateProfile = async (req, res) => {
         const currentProfile =
             await userModel.getProfile(userId);
 
-
         if (!currentProfile) {
-
             return res.status(404).json({
                 success: false,
                 message: "Profile not found"
             });
         }
 
-
         // =================================================
-        // IMPORTANT
+        // USER OWN PROFILE
         // =================================================
-        // User own profile-la username mattum change pannalam.
-        // Role change panna koodadhu.
-        // Role Super Admin mattum backend-la maintain aagum.
 
         const result =
             await userModel.updateProfile(
@@ -501,15 +421,12 @@ const updateProfile = async (req, res) => {
                 currentProfile.role
             );
 
-
         if (result.affectedRows === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "Profile not found"
             });
         }
-
 
         // =================================================
         // GET UPDATED PROFILE
@@ -518,31 +435,23 @@ const updateProfile = async (req, res) => {
         const updatedProfile =
             await userModel.getProfile(userId);
 
-
         res.json({
-
             success: true,
-
             message:
                 "Profile updated successfully",
-
             data:
                 updatedProfile
-
         });
 
     } catch (error) {
-
         console.error(
             "Update Profile Error:",
             error
         );
 
-
         if (
             error.code === "ER_DUP_ENTRY"
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -550,19 +459,16 @@ const updateProfile = async (req, res) => {
             });
         }
 
-
         if (
             error.code === "WARN_DATA_TRUNCATED" ||
             error.code === "ER_DATA_TOO_LONG"
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
                     "Invalid role value"
             });
         }
-
 
         res.status(500).json({
             success: false,
@@ -578,33 +484,26 @@ const updateProfile = async (req, res) => {
 // =====================================================
 
 const changePassword = async (req, res) => {
-
     try {
-
         if (!req.user || !req.user.user_id) {
-
             return res.status(401).json({
                 success: false,
                 message: "User authentication required"
             });
         }
 
-
         const userId =
             req.user.user_id;
-
 
         const {
             current_password,
             new_password
         } = req.body;
 
-
         if (
             !current_password ||
             !new_password
         ) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -612,9 +511,7 @@ const changePassword = async (req, res) => {
             });
         }
 
-
         if (new_password.length < 6) {
-
             return res.status(400).json({
                 success: false,
                 message:
@@ -622,21 +519,17 @@ const changePassword = async (req, res) => {
             });
         }
 
-
         const user =
             await userModel.getUserPassword(
                 userId
             );
 
-
         if (!user) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
-
 
         const isMatch =
             await bcrypt.compare(
@@ -644,9 +537,7 @@ const changePassword = async (req, res) => {
                 user.password
             );
 
-
         if (!isMatch) {
-
             return res.status(401).json({
                 success: false,
                 message:
@@ -654,37 +545,123 @@ const changePassword = async (req, res) => {
             });
         }
 
-
         await userModel.changePassword(
             userId,
             new_password
         );
 
-
         res.json({
-
             success: true,
-
             message:
                 "Password changed successfully"
-
         });
 
     } catch (error) {
-
         console.error(
             "Change Password Error:",
             error
         );
 
-
         res.status(500).json({
-
             success: false,
-
             message:
                 "Internal Server Error"
+        });
+    }
+};
 
+
+// =====================================================
+// RESET USER PASSWORD - SUPER ADMIN ONLY
+// =====================================================
+
+const resetPassword = async (req, res) => {
+    try {
+        // =================================================
+        // AUTHENTICATION CHECK
+        // =================================================
+
+        if (!req.user || !req.user.user_id) {
+            return res.status(401).json({
+                success: false,
+                message: "User authentication required"
+            });
+        }
+
+        // =================================================
+        // SUPER ADMIN ONLY
+        // =================================================
+
+        if (req.user.role !== "Super Admin") {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Only Super Admin can reset passwords"
+            });
+        }
+
+        const targetUserId = req.params.id;
+
+        // =================================================
+        // TARGET USER CHECK
+        // =================================================
+
+        const users =
+            await userModel.getUserById(
+                targetUserId
+            );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const targetUser = users[0];
+
+        // =================================================
+        // GENERATE TEMPORARY PASSWORD
+        // =================================================
+
+        const temporaryPassword =
+            crypto
+                .randomBytes(6)
+                .toString("base64url");
+
+        // =================================================
+        // RESET PASSWORD
+        // must_change_password = 1
+        // =================================================
+
+        await userModel.resetUserPassword(
+            targetUserId,
+            temporaryPassword
+        );
+
+        // =================================================
+        // RESPONSE
+        // =================================================
+
+        res.json({
+            success: true,
+            message:
+                `Password reset successfully for ${targetUser.username}`,
+            temporary_password:
+                temporaryPassword,
+            must_change_password: true
+        });
+
+    } catch (error) {
+        console.error(
+            "Reset Password Error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Internal Server Error"
         });
     }
 };
@@ -695,12 +672,9 @@ const changePassword = async (req, res) => {
 // =====================================================
 
 const deleteUser = async (req, res) => {
-
     try {
-
         const userId =
             req.params.id;
-
 
         // =================================================
         // GET TARGET USER
@@ -711,37 +685,29 @@ const deleteUser = async (req, res) => {
                 userId
             );
 
-
         if (users.length === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-
         const targetUser =
             users[0];
-
 
         // =================================================
         // SUPER ADMIN PROTECTION
         // =================================================
 
-        // Yaarum Super Admin account delete panna mudiyadhu
-
         if (
             targetUser.role === "Super Admin"
         ) {
-
             return res.status(403).json({
                 success: false,
                 message:
                     "Super Admin account cannot be deleted"
             });
         }
-
 
         // =================================================
         // DELETE
@@ -752,40 +718,29 @@ const deleteUser = async (req, res) => {
                 userId
             );
 
-
         if (result.affectedRows === 0) {
-
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-
         res.json({
-
             success: true,
-
             message:
                 "User deleted successfully"
-
         });
 
     } catch (error) {
-
         console.error(
             "Delete User Error:",
             error
         );
 
-
         res.status(500).json({
-
             success: false,
-
             message:
                 "Internal Server Error"
-
         });
     }
 };
@@ -796,11 +751,8 @@ const deleteUser = async (req, res) => {
 // =====================================================
 
 const getProfile = async (req, res) => {
-
     try {
-
         if (!req.user || !req.user.user_id) {
-
             return res.status(401).json({
                 success: false,
                 message:
@@ -808,15 +760,12 @@ const getProfile = async (req, res) => {
             });
         }
 
-
         const profile =
             await userModel.getProfile(
                 req.user.user_id
             );
 
-
         if (!profile) {
-
             return res.status(404).json({
                 success: false,
                 message:
@@ -824,31 +773,22 @@ const getProfile = async (req, res) => {
             });
         }
 
-
         res.json({
-
             success: true,
-
             data:
                 profile
-
         });
 
     } catch (error) {
-
         console.error(
             "Get Profile Error:",
             error
         );
 
-
         res.status(500).json({
-
             success: false,
-
             message:
                 "Internal Server Error"
-
         });
     }
 };
@@ -859,14 +799,13 @@ const getProfile = async (req, res) => {
 // =====================================================
 
 module.exports = {
-
     getUsers,
     getUserById,
     addUser,
     updateUser,
     updateProfile,
     changePassword,
+    resetPassword,
     deleteUser,
     getProfile
-
 };

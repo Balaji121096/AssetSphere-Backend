@@ -2,86 +2,146 @@ const authModel = require("../models/authModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const login = async (req, res) => {
 
-    console.log(req.body);
+// =====================================================
+// LOGIN
+// =====================================================
+
+const login = async (req, res) => {
 
     try {
 
-        const { username, password } = req.body;
+        const {
+            username,
+            password
+        } = req.body;
+
+
         if (!username || !password) {
 
             return res.status(400).json({
+
                 success: false,
-                message: "Username and Password are required"
+
+                message:
+                    "Username and Password are required"
+
             });
 
         }
 
-        const user = await authModel.login(username);
+
+        const user =
+            await authModel.login(username);
+
 
         if (!user) {
 
             return res.status(401).json({
+
                 success: false,
-                message: "Invalid Username"
+
+                message:
+                    "Invalid Username"
+
             });
 
         }
+
 
         if (user.status !== "Active") {
 
             return res.status(403).json({
+
                 success: false,
-                message: "User is Inactive"
+
+                message:
+                    "User is Inactive"
+
             });
 
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+
+        const isMatch =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
+
 
         if (!isMatch) {
 
             return res.status(401).json({
+
                 success: false,
-                message: "Invalid Password"
+
+                message:
+                    "Invalid Password"
+
             });
 
         }
 
-        const token = jwt.sign(
 
-            {
-                user_id: user.user_id,
-                employee_id: user.employee_id,
-                username: user.username,
-                role: user.role
-            },
+        const token =
+            jwt.sign(
 
-            process.env.JWT_SECRET,
+                {
+                    user_id:
+                        user.user_id,
 
-            {
-                expiresIn: "8h"
-            }
+                    employee_id:
+                        user.employee_id,
 
-        );
+                    username:
+                        user.username,
 
-        console.log("Generated Token:");
-console.log(token);
+                    role:
+                        user.role
+                },
 
-        res.json({
+                process.env.JWT_SECRET,
+
+                {
+                    expiresIn: "8h"
+                }
+
+            );
+
+
+        return res.json({
 
             success: true,
 
-            message: "Login Successful",
+            message:
+                "Login Successful",
 
             token,
 
+            must_change_password:
+                Number(
+                    user.must_change_password || 0
+                ) === 1,
+
             user: {
 
-                user_id: user.user_id,
-                username: user.username,
-                role: user.role
+                user_id:
+                    user.user_id,
+
+                employee_id:
+                    user.employee_id,
+
+                username:
+                    user.username,
+
+                role:
+                    user.role,
+
+                must_change_password:
+                    Number(
+                        user.must_change_password || 0
+                    ) === 1
 
             }
 
@@ -89,19 +149,24 @@ console.log(token);
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Login Error:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 
-            message: "Internal Server Error"
+            message:
+                "Internal Server Error"
 
         });
 
     }
 
 };
+
 
 module.exports = {
     login
