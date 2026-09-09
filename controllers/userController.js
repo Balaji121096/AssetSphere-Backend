@@ -94,30 +94,59 @@ const getUserById = async (req, res) => {
 const addUser = async (req, res) => {
     try {
         const {
-            employee_id,
+            employee_code,
             username,
             password,
             role,
             status
         } = req.body;
 
-        // Required fields
+        // =================================================
+        // REQUIRED FIELD VALIDATION
+        // =================================================
+
         if (
-            !employee_id ||
+            !employee_code ||
             !username ||
             !password
         ) {
             return res.status(400).json({
                 success: false,
                 message:
-                    "Employee, username and password are required"
+                    "Employee Code, username and password are required"
             });
         }
 
-        // Default role
+        const cleanEmployeeCode =
+            String(employee_code).trim();
+
+        const cleanUsername =
+            String(username).trim();
+
+        if (!cleanEmployeeCode) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee Code is required"
+            });
+        }
+
+        if (!cleanUsername) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required"
+            });
+        }
+
+        // =================================================
+        // DEFAULT ROLE
+        // =================================================
+
         const newRole = role || "Viewer";
 
-        // Allowed roles
+        // =================================================
+        // ALLOWED ROLES
+        // =================================================
+
         const allowedRoles = [
             "Super Admin",
             "Admin",
@@ -152,8 +181,8 @@ const addUser = async (req, res) => {
         // =================================================
 
         const result = await userModel.addUser({
-            employee_id,
-            username,
+            employee_code: cleanEmployeeCode,
+            username: cleanUsername,
             password,
             role: newRole,
             status: status || "Active"
@@ -168,6 +197,40 @@ const addUser = async (req, res) => {
     } catch (error) {
         console.error("Add User Error:", error);
 
+        // =================================================
+        // EMPLOYEE NOT FOUND
+        // =================================================
+
+        if (
+            error.message ===
+            "Employee not found for the provided Employee Code"
+        ) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Employee Code not found in Employee Master"
+            });
+        }
+
+        // =================================================
+        // EMPLOYEE ALREADY HAS ACCOUNT
+        // =================================================
+
+        if (
+            error.message ===
+            "User account already exists for this employee"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "A user account already exists for this Employee Code"
+            });
+        }
+
+        // =================================================
+        // DUPLICATE USERNAME
+        // =================================================
+
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(400).json({
                 success: false,
@@ -175,13 +238,18 @@ const addUser = async (req, res) => {
             });
         }
 
+        // =================================================
+        // INVALID ENUM / DATA
+        // =================================================
+
         if (
             error.code === "WARN_DATA_TRUNCATED" ||
             error.code === "ER_DATA_TOO_LONG"
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid role or status value"
+                message:
+                    "Invalid role or status value"
             });
         }
 
@@ -228,7 +296,8 @@ const updateUser = async (req, res) => {
         ) {
             return res.status(403).json({
                 success: false,
-                message: "Admin cannot update Super Admin account"
+                message:
+                    "Admin cannot update Super Admin account"
             });
         }
 
@@ -237,11 +306,43 @@ const updateUser = async (req, res) => {
         // =================================================
 
         const {
-            employee_id,
+            employee_code,
             username,
             role,
             status
         } = req.body;
+
+        // =================================================
+        // EMPLOYEE CODE
+        // =================================================
+
+        const cleanEmployeeCode =
+            employee_code
+                ? String(employee_code).trim()
+                : targetUser.employee_code;
+
+        if (!cleanEmployeeCode) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee Code is required"
+            });
+        }
+
+        // =================================================
+        // USERNAME
+        // =================================================
+
+        const cleanUsername =
+            username
+                ? String(username).trim()
+                : targetUser.username;
+
+        if (!cleanUsername) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required"
+            });
+        }
 
         // =================================================
         // ROLE VALIDATION
@@ -274,7 +375,8 @@ const updateUser = async (req, res) => {
         ) {
             return res.status(403).json({
                 success: false,
-                message: "Admin cannot assign Super Admin role"
+                message:
+                    "Admin cannot assign Super Admin role"
             });
         }
 
@@ -289,23 +391,24 @@ const updateUser = async (req, res) => {
         ) {
             return res.status(403).json({
                 success: false,
-                message: "Super Admin role cannot be removed"
+                message:
+                    "Super Admin role cannot be removed"
             });
         }
 
         // =================================================
-        // UPDATE
+        // UPDATE USER
         // =================================================
 
         const result =
             await userModel.updateUser(
                 userId,
                 {
-                    employee_id:
-                        employee_id || targetUser.employee_id,
+                    employee_code:
+                        cleanEmployeeCode,
 
                     username:
-                        username || targetUser.username,
+                        cleanUsername,
 
                     role:
                         newRole,
@@ -334,6 +437,40 @@ const updateUser = async (req, res) => {
             error
         );
 
+        // =================================================
+        // EMPLOYEE NOT FOUND
+        // =================================================
+
+        if (
+            error.message ===
+            "Employee not found for the provided Employee Code"
+        ) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Employee Code not found in Employee Master"
+            });
+        }
+
+        // =================================================
+        // EMPLOYEE ALREADY ASSIGNED
+        // =================================================
+
+        if (
+            error.message ===
+            "Another user account already exists for this employee"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Another user account already exists for this Employee Code"
+            });
+        }
+
+        // =================================================
+        // DUPLICATE USERNAME
+        // =================================================
+
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(400).json({
                 success: false,
@@ -341,13 +478,18 @@ const updateUser = async (req, res) => {
             });
         }
 
+        // =================================================
+        // INVALID ENUM / DATA
+        // =================================================
+
         if (
             error.code === "WARN_DATA_TRUNCATED" ||
             error.code === "ER_DATA_TOO_LONG"
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid role or status value"
+                message:
+                    "Invalid role or status value"
             });
         }
 
@@ -368,11 +510,13 @@ const updateProfile = async (req, res) => {
         if (!req.user || !req.user.user_id) {
             return res.status(401).json({
                 success: false,
-                message: "User authentication required"
+                message:
+                    "User authentication required"
             });
         }
 
-        const userId = req.user.user_id;
+        const userId =
+            req.user.user_id;
 
         const {
             username
@@ -389,7 +533,8 @@ const updateProfile = async (req, res) => {
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Username is required"
+                message:
+                    "Username is required"
             });
         }
 
@@ -406,7 +551,8 @@ const updateProfile = async (req, res) => {
         if (!currentProfile) {
             return res.status(404).json({
                 success: false,
-                message: "Profile not found"
+                message:
+                    "Profile not found"
             });
         }
 
@@ -424,7 +570,8 @@ const updateProfile = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
-                message: "Profile not found"
+                message:
+                    "Profile not found"
             });
         }
 
@@ -488,7 +635,8 @@ const changePassword = async (req, res) => {
         if (!req.user || !req.user.user_id) {
             return res.status(401).json({
                 success: false,
-                message: "User authentication required"
+                message:
+                    "User authentication required"
             });
         }
 
@@ -527,7 +675,8 @@ const changePassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message:
+                    "User not found"
             });
         }
 
@@ -584,7 +733,8 @@ const resetPassword = async (req, res) => {
         if (!req.user || !req.user.user_id) {
             return res.status(401).json({
                 success: false,
-                message: "User authentication required"
+                message:
+                    "User authentication required"
             });
         }
 
@@ -600,7 +750,8 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        const targetUserId = req.params.id;
+        const targetUserId =
+            req.params.id;
 
         // =================================================
         // TARGET USER CHECK
@@ -614,7 +765,8 @@ const resetPassword = async (req, res) => {
         if (users.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message:
+                    "User not found"
             });
         }
 
@@ -649,7 +801,8 @@ const resetPassword = async (req, res) => {
                 `Password reset successfully for ${targetUser.username}`,
             temporary_password:
                 temporaryPassword,
-            must_change_password: true
+            must_change_password:
+                true
         });
 
     } catch (error) {
@@ -688,7 +841,8 @@ const deleteUser = async (req, res) => {
         if (users.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message:
+                    "User not found"
             });
         }
 
@@ -721,7 +875,8 @@ const deleteUser = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message:
+                    "User not found"
             });
         }
 

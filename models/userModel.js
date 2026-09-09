@@ -104,15 +104,94 @@ const getUserByUsername = async (username) => {
 
 
 // =====================================================
+// FIND EMPLOYEE ID BY EMPLOYEE CODE
+// =====================================================
+
+const getEmployeeIdByCode = async (
+    employeeCode
+) => {
+
+    const [rows] = await db.query(
+        `
+        SELECT
+            employee_id,
+            employee_code,
+            first_name,
+            last_name
+
+        FROM employees
+
+        WHERE employee_code = ?
+
+        LIMIT 1
+        `,
+        [employeeCode]
+    );
+
+    return rows[0];
+};
+
+
+// =====================================================
 // ADD USER
 // =====================================================
 
 const addUser = async (user) => {
 
+    /* =================================================
+       FIND EMPLOYEE USING EMPLOYEE CODE
+    ================================================= */
+
+    const employee = await getEmployeeIdByCode(
+        user.employee_code
+    );
+
+    if (!employee) {
+        throw new Error(
+            `Employee Code "${user.employee_code}" not found.`
+        );
+    }
+
+    /* =================================================
+       CHECK WHETHER EMPLOYEE ALREADY HAS USER ACCOUNT
+    ================================================= */
+
+    const [existingUser] = await db.query(
+        `
+        SELECT
+            user_id,
+            username
+
+        FROM users
+
+        WHERE employee_id = ?
+
+        LIMIT 1
+        `,
+        [employee.employee_id]
+    );
+
+    if (existingUser.length > 0) {
+        throw new Error(
+            `Employee Code "${user.employee_code}" already has a user account.`
+        );
+    }
+
+    /* =================================================
+       HASH PASSWORD
+    ================================================= */
+
     const hashedPassword = await bcrypt.hash(
         user.password,
         10
     );
+
+    /* =================================================
+       INSERT USER
+
+       employee_code comes from frontend.
+       employee_id is taken from employees table.
+    ================================================= */
 
     const [result] = await db.query(
         `
@@ -128,7 +207,7 @@ const addUser = async (user) => {
         VALUES (?, ?, ?, ?, ?, ?)
         `,
         [
-            user.employee_id,
+            employee.employee_id,
             user.username,
             hashedPassword,
             user.role || "Viewer",
@@ -145,7 +224,57 @@ const addUser = async (user) => {
 // UPDATE USER
 // =====================================================
 
-const updateUser = async (userId, user) => {
+const updateUser = async (
+    userId,
+    user
+) => {
+
+    /* =================================================
+       FIND EMPLOYEE USING EMPLOYEE CODE
+    ================================================= */
+
+    const employee = await getEmployeeIdByCode(
+        user.employee_code
+    );
+
+    if (!employee) {
+        throw new Error(
+            `Employee Code "${user.employee_code}" not found.`
+        );
+    }
+
+    /* =================================================
+       CHECK WHETHER ANOTHER USER IS USING EMPLOYEE
+    ================================================= */
+
+    const [existingUser] = await db.query(
+        `
+        SELECT
+            user_id,
+            username
+
+        FROM users
+
+        WHERE employee_id = ?
+          AND user_id != ?
+
+        LIMIT 1
+        `,
+        [
+            employee.employee_id,
+            userId
+        ]
+    );
+
+    if (existingUser.length > 0) {
+        throw new Error(
+            `Employee Code "${user.employee_code}" is already assigned to another user.`
+        );
+    }
+
+    /* =================================================
+       UPDATE USER
+    ================================================= */
 
     const [result] = await db.query(
         `
@@ -159,7 +288,7 @@ const updateUser = async (userId, user) => {
         WHERE user_id = ?
         `,
         [
-            user.employee_id,
+            employee.employee_id,
             user.username,
             user.role,
             user.status,
@@ -235,7 +364,9 @@ const changePassword = async (
 // GET PASSWORD BY USER ID
 // =====================================================
 
-const getUserPassword = async (userId) => {
+const getUserPassword = async (
+    userId
+) => {
 
     const [rows] = await db.query(
         `
@@ -292,7 +423,9 @@ const resetUserPassword = async (
 // DELETE USER
 // =====================================================
 
-const deleteUser = async (userId) => {
+const deleteUser = async (
+    userId
+) => {
 
     const [result] = await db.query(
         `
@@ -311,7 +444,9 @@ const deleteUser = async (userId) => {
 // GET LOGGED-IN USER PROFILE
 // =====================================================
 
-const getProfile = async (userId) => {
+const getProfile = async (
+    userId
+) => {
 
     const [rows] = await db.query(
         `
@@ -360,13 +495,18 @@ module.exports = {
     getAllUsers,
     getUserById,
     getUserByUsername,
+
+    getEmployeeIdByCode,
+
     addUser,
     updateUser,
+
     updateProfile,
     changePassword,
     getUserPassword,
     resetUserPassword,
     deleteUser,
+
     getProfile
 
 };
