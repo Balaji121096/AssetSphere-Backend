@@ -5,57 +5,105 @@ const router = express.Router();
 const softwareController = require("../controllers/softwareController");
 
 const verifyToken = require("../middleware/authMiddleware");
+
 const authorizeRole = require("../middleware/roleMiddleware");
 
 
-// GET All Software
+// =========================================================
+// GET ALL SOFTWARE
+// =========================================================
+
 router.get(
     "/",
     verifyToken,
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
     softwareController.getSoftware
 );
+
+
+// =========================================================
+// GET SOFTWARE EXPIRY ALERTS
+// =========================================================
 
 router.get(
     "/expiry-alerts",
     verifyToken,
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
     softwareController.getExpiryAlerts
 );
 
 
-// GET Software By ID
+// =========================================================
+// GET SOFTWARE BY ID
+// =========================================================
+
 router.get(
     "/:id",
     verifyToken,
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
     softwareController.getSoftwareById
 );
 
 
-// ADD Software
+// =========================================================
+// ADD SOFTWARE
+// =========================================================
+
 router.post(
     "/",
     verifyToken,
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
     softwareController.addSoftware
 );
 
 
-// UPDATE Software
+// =========================================================
+// UPDATE SOFTWARE
+// =========================================================
+
 router.put(
     "/:id",
     verifyToken,
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
     softwareController.updateSoftware
 );
 
 
-// DELETE Software
+// =========================================================
+// DELETE SOFTWARE
+// =========================================================
+
 router.delete(
     "/:id",
     verifyToken,
-    authorizeRole("Admin"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
     softwareController.deleteSoftware
 );
 

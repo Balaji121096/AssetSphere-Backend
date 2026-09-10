@@ -14,142 +14,170 @@ const authorizeRole =
 
 // =====================================================
 // ASSET SUMMARY
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/assets/summary",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getAssetReportSummary
-
 );
 
 
 // =====================================================
 // ALL ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/assets",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getAllAssets
-
 );
 
 
 // =====================================================
 // ASSIGNED ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/assigned",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getAssignedAssets
-
 );
 
 
 // =====================================================
 // SCRAP ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/scrap",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getScrapAssets
-
 );
 
 
 // =====================================================
 // REPAIR ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/repair",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getRepairAssets
-
 );
 
 
 // =====================================================
 // LOST ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/lost",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getLostAssets
-
 );
 
 
 // =====================================================
 // EMPLOYEE ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/employee-assets",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getEmployeeAssets
-
 );
 
 
 // =====================================================
 // PURCHASE REPORT
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
-
     "/purchases",
 
     verifyToken,
 
-    authorizeRole("Admin", "IT"),
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
 
     reportController.getPurchaseReport
-
 );
 
-
-// =====================================================
-// EXPORT
-// =====================================================
 
 module.exports = router;

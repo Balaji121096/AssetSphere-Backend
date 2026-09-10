@@ -12,47 +12,104 @@ const authorizeRole =
     require("../middleware/roleMiddleware");
 
 
-// GET ALL
+// =====================================================
+// GET ALL EMPLOYEES
+// VIEWER + MANAGER + ADMIN + HR
+// =====================================================
+
 router.get(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "HR"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "HR",
+        "Viewer"
+    ),
+
     employeeController.getAllEmployees
 );
 
 
-// GET ONE
+// =====================================================
+// GET ONE EMPLOYEE
+// VIEWER + MANAGER + ADMIN + HR
+// =====================================================
+
 router.get(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "HR"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "HR",
+        "Viewer"
+    ),
+
     employeeController.getEmployeeById
 );
 
 
-// ADD
+// =====================================================
+// ADD EMPLOYEE
+// MANAGER + ADMIN + HR
+// =====================================================
+
 router.post(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "HR"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "HR"
+    ),
+
     employeeController.addEmployee
 );
 
 
-// UPDATE
+// =====================================================
+// UPDATE EMPLOYEE
+// MANAGER + ADMIN + HR
+// =====================================================
+
 router.put(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "HR"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "HR"
+    ),
+
     employeeController.updateEmployee
 );
 
 
-// DELETE
+// =====================================================
+// DELETE EMPLOYEE
+// MANAGER + ADMIN + HR
+// =====================================================
+
 router.delete(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "HR"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "HR"
+    ),
+
     employeeController.deleteEmployee
 );
 

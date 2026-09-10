@@ -17,6 +17,7 @@ const authRoutes = require("./routes/authRoutes");
 const softwareRoutes = require("./routes/softwareRoutes");
 const vendorDocumentRoutes = require("./routes/vendorDocumentRoutes");
 const purchaseRoutes = require("./routes/purchaseRoutes");
+const companySettingsRoutes = require("./routes/companySettingsRoutes");
 
 // =====================================================
 // USER ROUTES
@@ -67,6 +68,10 @@ app.use(
     departmentRoutes
 );
 
+app.use(
+    "/api/company-settings",
+    companySettingsRoutes
+);
 
 // =====================================================
 // DESIGNATION API

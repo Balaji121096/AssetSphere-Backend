@@ -13,109 +13,182 @@ const authorizeRole =
 
 
 // =====================================================
-// GET ALL
+// GET ALL ASSETS
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
+
     assetController.getAssets
 );
 
 
 // =====================================================
-// ADD
+// ADD ASSET
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.post(
     "/",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.addAsset
 );
 
 
 // =====================================================
-// GET ONE
+// GET ONE ASSET
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
+
     assetController.getAssetById
 );
 
 
 // =====================================================
-// ASSIGN
+// ASSIGN ASSET
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
     "/assign/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.assignAsset
 );
 
 
 // =====================================================
-// RETURN
+// RETURN ASSET
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
     "/return/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.returnAsset
 );
 
 
 // =====================================================
-// SCRAP
+// SCRAP ASSET
+// MANAGER + ADMIN
 // =====================================================
 
 router.put(
     "/scrap/:id",
+
     verifyToken,
-    authorizeRole("Admin"),
+
+    authorizeRole(
+        "Admin",
+        "Manager"
+    ),
+
     assetController.scrapAsset
 );
 
 
 // =====================================================
 // STATUS CHANGE
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
     "/status/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.updateAssetStatus
 );
 
 
 // =====================================================
-// UPDATE
+// UPDATE ASSET
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.updateAsset
 );
 
 
 // =====================================================
-// DELETE
+// DELETE ASSET
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.delete(
     "/:id",
+
     verifyToken,
-    authorizeRole("Admin", "IT"),
+
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT"
+    ),
+
     assetController.deleteAsset
 );
 

@@ -16,9 +16,9 @@ const {
 } = require("../middleware/uploadPurchaseDocument");
 
 
-
 // =====================================================
 // GET PURCHASE SUMMARY
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
@@ -28,7 +28,9 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "IT"
+        "Manager",
+        "IT",
+        "Viewer"
     ),
 
     purchaseController.getPurchaseSummary
@@ -37,6 +39,7 @@ router.get(
 
 // =====================================================
 // UPLOAD / REPLACE PURCHASE DOCUMENT
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.post(
@@ -46,6 +49,7 @@ router.post(
 
     authorizeRole(
         "Admin",
+        "Manager",
         "IT"
     ),
 
@@ -57,6 +61,7 @@ router.post(
 
 // =====================================================
 // VIEW / DOWNLOAD PURCHASE DOCUMENT
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
@@ -66,7 +71,9 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "IT"
+        "Manager",
+        "IT",
+        "Viewer"
     ),
 
     purchaseController.getPurchaseDocument
@@ -75,6 +82,7 @@ router.get(
 
 // =====================================================
 // DELETE PURCHASE DOCUMENT
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.delete(
@@ -84,6 +92,7 @@ router.delete(
 
     authorizeRole(
         "Admin",
+        "Manager",
         "IT"
     ),
 
@@ -93,6 +102,7 @@ router.delete(
 
 // =====================================================
 // GET ALL PURCHASES
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
@@ -102,7 +112,9 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "IT"
+        "Manager",
+        "IT",
+        "Viewer"
     ),
 
     purchaseController.getPurchases
@@ -111,6 +123,7 @@ router.get(
 
 // =====================================================
 // GET PURCHASE BY ID
+// VIEWER + MANAGER + ADMIN + IT
 // =====================================================
 
 router.get(
@@ -120,7 +133,9 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "IT"
+        "Manager",
+        "IT",
+        "Viewer"
     ),
 
     purchaseController.getPurchaseById
@@ -129,6 +144,7 @@ router.get(
 
 // =====================================================
 // ADD PURCHASE
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.post(
@@ -138,6 +154,7 @@ router.post(
 
     authorizeRole(
         "Admin",
+        "Manager",
         "IT"
     ),
 
@@ -147,6 +164,7 @@ router.post(
 
 // =====================================================
 // UPDATE PURCHASE
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
@@ -156,6 +174,7 @@ router.put(
 
     authorizeRole(
         "Admin",
+        "Manager",
         "IT"
     ),
 
@@ -165,6 +184,7 @@ router.put(
 
 // =====================================================
 // DELETE PURCHASE
+// MANAGER + ADMIN + IT
 // =====================================================
 
 router.delete(
@@ -173,7 +193,9 @@ router.delete(
     verifyToken,
 
     authorizeRole(
-        "Admin"
+        "Admin",
+        "Manager",
+        "IT"
     ),
 
     purchaseController.deletePurchase
