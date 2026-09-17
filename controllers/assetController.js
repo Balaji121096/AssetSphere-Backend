@@ -107,7 +107,7 @@ const addAsset = async (req, res) => {
 
 
 // =====================================================
-// UPDATE Asset
+// UPDATE ASSET
 // =====================================================
 
 const updateAsset = async (req, res) => {
@@ -119,32 +119,45 @@ const updateAsset = async (req, res) => {
             current_employee_id
         } = req.body;
 
-        let employeeId = current_employee_id || null;
+        let employeeId =
+            current_employee_id || null;
+
 
         // Assigned asset must have employee
-        if (asset_status === "Assigned" && !employeeId) {
+        if (
+            asset_status === "Assigned" &&
+            !employeeId
+        ) {
 
             return res.status(400).json({
                 success: false,
-                message: "Assigned asset must have an employee"
+                message:
+                    "Assigned asset must have an employee"
             });
 
         }
 
-        // Other statuses don't need employee
+
+        // Statuses that don't need employee
         if (
             asset_status === "In Stock" ||
+            asset_status === "Spare" ||
             asset_status === "Repair" ||
             asset_status === "Scrap" ||
             asset_status === "Lost"
         ) {
+
             employeeId = null;
+
         }
+
 
         const updatedAsset = {
             ...req.body,
-            current_employee_id: employeeId
+            current_employee_id:
+                employeeId
         };
+
 
         const result =
             await assetModel.updateAsset(
@@ -152,7 +165,10 @@ const updateAsset = async (req, res) => {
                 updatedAsset
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -160,6 +176,7 @@ const updateAsset = async (req, res) => {
             });
 
         }
+
 
         // Add history
         await assetModel.addAssetHistory(
@@ -169,9 +186,11 @@ const updateAsset = async (req, res) => {
             `Asset updated. Status: ${asset_status}`
         );
 
+
         res.json({
             success: true,
-            message: "Asset updated successfully"
+            message:
+                "Asset updated successfully"
         });
 
     } catch (error) {
@@ -180,11 +199,14 @@ const updateAsset = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to update asset"
+            message:
+                "Failed to update asset"
         });
 
     }
+
 };
+
 
 // =====================================================
 // DELETE ASSET
@@ -199,7 +221,10 @@ const deleteAsset = async (req, res) => {
                 req.params.id
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -208,9 +233,11 @@ const deleteAsset = async (req, res) => {
 
         }
 
+
         res.json({
             success: true,
-            message: "Asset deleted successfully"
+            message:
+                "Asset deleted successfully"
         });
 
     } catch (error) {
@@ -237,23 +264,32 @@ const updateAssetStatus = async (req, res) => {
     try {
 
         const allowedStatuses = [
+
             "Assigned",
             "In Stock",
+            "Spare",
             "Repair",
             "Scrap",
             "Lost"
+
         ];
+
 
         const { status } = req.body;
 
-        if (!allowedStatuses.includes(status)) {
+
+        if (
+            !allowedStatuses.includes(status)
+        ) {
 
             return res.status(400).json({
                 success: false,
-                message: "Invalid asset status"
+                message:
+                    "Invalid asset status"
             });
 
         }
+
 
         const result =
             await assetModel.updateAssetStatus(
@@ -261,7 +297,10 @@ const updateAssetStatus = async (req, res) => {
                 status
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -270,6 +309,7 @@ const updateAssetStatus = async (req, res) => {
 
         }
 
+
         await assetModel.addAssetHistory(
             req.params.id,
             null,
@@ -277,9 +317,11 @@ const updateAssetStatus = async (req, res) => {
             `Asset status changed to ${status}`
         );
 
+
         res.json({
             success: true,
-            message: "Asset status updated successfully"
+            message:
+                "Asset status updated successfully"
         });
 
     } catch (error) {
@@ -288,7 +330,8 @@ const updateAssetStatus = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to update asset status"
+            message:
+                "Failed to update asset status"
         });
 
     }
@@ -309,7 +352,10 @@ const scrapAsset = async (req, res) => {
                 req.params.id
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -318,6 +364,7 @@ const scrapAsset = async (req, res) => {
 
         }
 
+
         await assetModel.addAssetHistory(
             req.params.id,
             null,
@@ -325,9 +372,11 @@ const scrapAsset = async (req, res) => {
             "Asset Scrapped"
         );
 
+
         res.json({
             success: true,
-            message: "Asset moved to Scrap successfully"
+            message:
+                "Asset moved to Scrap successfully"
         });
 
     } catch (error) {
@@ -336,7 +385,8 @@ const scrapAsset = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to scrap asset"
+            message:
+                "Failed to scrap asset"
         });
 
     }
@@ -358,7 +408,10 @@ const assignAsset = async (req, res) => {
                 req.body.employee_id
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -367,6 +420,7 @@ const assignAsset = async (req, res) => {
 
         }
 
+
         await assetModel.addAssetHistory(
             req.params.id,
             req.body.employee_id,
@@ -374,9 +428,11 @@ const assignAsset = async (req, res) => {
             "Asset Assigned"
         );
 
+
         res.json({
             success: true,
-            message: "Asset assigned successfully"
+            message:
+                "Asset assigned successfully"
         });
 
     } catch (error) {
@@ -385,7 +441,8 @@ const assignAsset = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to assign asset"
+            message:
+                "Failed to assign asset"
         });
 
     }
@@ -406,7 +463,10 @@ const returnAsset = async (req, res) => {
                 req.params.id
             );
 
-        if (result.affectedRows === 0) {
+
+        if (
+            result.affectedRows === 0
+        ) {
 
             return res.status(404).json({
                 success: false,
@@ -415,6 +475,7 @@ const returnAsset = async (req, res) => {
 
         }
 
+
         await assetModel.addAssetHistory(
             req.params.id,
             null,
@@ -422,9 +483,11 @@ const returnAsset = async (req, res) => {
             "Asset Returned"
         );
 
+
         res.json({
             success: true,
-            message: "Asset returned successfully"
+            message:
+                "Asset returned successfully"
         });
 
     } catch (error) {
@@ -433,7 +496,8 @@ const returnAsset = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: "Failed to return asset"
+            message:
+                "Failed to return asset"
         });
 
     }
@@ -442,6 +506,7 @@ const returnAsset = async (req, res) => {
 
 
 module.exports = {
+
     getAssets,
     getAssetById,
     addAsset,
@@ -451,4 +516,5 @@ module.exports = {
     scrapAsset,
     assignAsset,
     returnAsset
+
 };
