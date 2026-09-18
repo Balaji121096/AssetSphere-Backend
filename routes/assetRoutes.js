@@ -19,16 +19,13 @@ const authorizeRole =
 
 router.get(
     "/",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT",
         "Viewer"
     ),
-
     assetController.getAssets
 );
 
@@ -40,15 +37,12 @@ router.get(
 
 router.post(
     "/",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.addAsset
 );
 
@@ -60,36 +54,30 @@ router.post(
 
 router.get(
     "/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT",
         "Viewer"
     ),
-
     assetController.getAssetById
 );
 
 
 // =====================================================
-// ASSIGN ASSET
+// ASSIGN ASSET   (Frontend format: /assets/:id/assign)
 // MANAGER + ADMIN + IT
 // =====================================================
 
 router.put(
-    "/assign/:id",
-
+    "/:id/assign",
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.assignAsset
 );
 
@@ -101,15 +89,12 @@ router.put(
 
 router.put(
     "/return/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.returnAsset
 );
 
@@ -121,14 +106,11 @@ router.put(
 
 router.put(
     "/scrap/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager"
     ),
-
     assetController.scrapAsset
 );
 
@@ -140,15 +122,12 @@ router.put(
 
 router.put(
     "/status/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.updateAssetStatus
 );
 
@@ -160,15 +139,12 @@ router.put(
 
 router.put(
     "/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.updateAsset
 );
 
@@ -180,15 +156,12 @@ router.put(
 
 router.delete(
     "/:id",
-
     verifyToken,
-
     authorizeRole(
         "Admin",
         "Manager",
         "IT"
     ),
-
     assetController.deleteAsset
 );
 

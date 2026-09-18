@@ -11,83 +11,59 @@ const getAllAssets = async (assetType = null) => {
         SELECT
             h.asset_id,
             h.asset_code,
-
             h.asset_type,
             h.asset_name,
-
             h.category_id,
             c.category_name,
-
             h.brand,
             h.model,
             h.serial_number,
-
             h.hostname,
             h.ip_address,
             h.mac_address,
             h.service_tag,
-
             h.processor,
             h.ram,
             h.ram_capacity,
             h.storage,
             h.storage_spec,
             h.operating_system,
-
             h.configuration_specs,
-
             h.vendor_id,
             v.vendor_name,
-
             h.vendor_name AS stored_vendor_name,
-
             h.purchase_date,
             h.purchase_cost,
             h.invoice_number,
-
             h.warranty_expiry,
             h.warranty_status,
-
             h.department,
-
             h.current_employee_id,
             e.display_name,
             e.employee_id,
-
             h.assigned_date,
             h.returned_date,
-
             h.location_id,
             l.location_name,
             h.floor,
-
             h.asset_status,
             h.remarks,
-
             h.warranty_document_name,
             h.warranty_document_path,
-
             h.created_at,
             h.updated_at
-
         FROM hardware_assets h
-
         LEFT JOIN asset_categories c
             ON h.category_id = c.category_id
-
         LEFT JOIN employees e
             ON h.current_employee_id = e.employee_id
-
         LEFT JOIN vendors v
             ON h.vendor_id = v.vendor_id
-
         LEFT JOIN office_locations l
             ON h.location_id = l.location_id
     `;
 
-
     const params = [];
-
 
     if (
         assetType &&
@@ -95,30 +71,19 @@ const getAllAssets = async (assetType = null) => {
         assetType !== "all" &&
         assetType !== "ALL"
     ) {
-
         query += `
             WHERE h.asset_type = ?
         `;
-
         params.push(assetType);
-
     }
-
 
     query += `
         ORDER BY h.asset_code ASC
     `;
 
-
-    const [rows] =
-        await db.query(
-            query,
-            params
-        );
-
+    const [rows] = await db.query(query, params);
 
     return rows;
-
 };
 
 
@@ -128,93 +93,65 @@ const getAllAssets = async (assetType = null) => {
 
 const getAssetById = async (id) => {
 
-    const [rows] =
-        await db.query(`
-            SELECT
-                h.asset_id,
-                h.asset_code,
-
-                h.asset_type,
-                h.asset_name,
-
-                h.category_id,
-                c.category_name,
-
-                h.brand,
-                h.model,
-                h.serial_number,
-
-                h.hostname,
-                h.ip_address,
-                h.mac_address,
-                h.service_tag,
-
-                h.processor,
-                h.ram,
-                h.ram_capacity,
-                h.storage,
-                h.storage_spec,
-                h.operating_system,
-
-                h.configuration_specs,
-
-                h.vendor_id,
-                v.vendor_name,
-
-                h.vendor_name AS stored_vendor_name,
-
-                h.purchase_date,
-                h.purchase_cost,
-                h.invoice_number,
-
-                h.warranty_expiry,
-                h.warranty_status,
-
-                h.department,
-
-                h.current_employee_id,
-                e.display_name,
-                e.employee_id,
-
-                h.assigned_date,
-                h.returned_date,
-
-                h.location_id,
-                l.location_name,
-                h.floor,
-
-                h.asset_status,
-                h.remarks,
-
-                h.warranty_document_name,
-                h.warranty_document_path,
-
-                h.created_at,
-                h.updated_at
-
-            FROM hardware_assets h
-
-            LEFT JOIN asset_categories c
-                ON h.category_id = c.category_id
-
-            LEFT JOIN employees e
-                ON h.current_employee_id = e.employee_id
-
-            LEFT JOIN vendors v
-                ON h.vendor_id = v.vendor_id
-
-            LEFT JOIN office_locations l
-                ON h.location_id = l.location_id
-
-            WHERE h.asset_id = ?
-
-            LIMIT 1
-        `,
-        [id]);
-
+    const [rows] = await db.query(`
+        SELECT
+            h.asset_id,
+            h.asset_code,
+            h.asset_type,
+            h.asset_name,
+            h.category_id,
+            c.category_name,
+            h.brand,
+            h.model,
+            h.serial_number,
+            h.hostname,
+            h.ip_address,
+            h.mac_address,
+            h.service_tag,
+            h.processor,
+            h.ram,
+            h.ram_capacity,
+            h.storage,
+            h.storage_spec,
+            h.operating_system,
+            h.configuration_specs,
+            h.vendor_id,
+            v.vendor_name,
+            h.vendor_name AS stored_vendor_name,
+            h.purchase_date,
+            h.purchase_cost,
+            h.invoice_number,
+            h.warranty_expiry,
+            h.warranty_status,
+            h.department,
+            h.current_employee_id,
+            e.display_name,
+            e.employee_id,
+            h.assigned_date,
+            h.returned_date,
+            h.location_id,
+            l.location_name,
+            h.floor,
+            h.asset_status,
+            h.remarks,
+            h.warranty_document_name,
+            h.warranty_document_path,
+            h.created_at,
+            h.updated_at
+        FROM hardware_assets h
+        LEFT JOIN asset_categories c
+            ON h.category_id = c.category_id
+        LEFT JOIN employees e
+            ON h.current_employee_id = e.employee_id
+        LEFT JOIN vendors v
+            ON h.vendor_id = v.vendor_id
+        LEFT JOIN office_locations l
+            ON h.location_id = l.location_id
+        WHERE h.asset_id = ?
+        LIMIT 1
+    `, [id]);
 
     return rows[0];
-
 };
 
 
@@ -224,111 +161,91 @@ const getAssetById = async (id) => {
 
 const addAsset = async (asset) => {
 
-    const [result] =
-        await db.query(`
-            INSERT INTO hardware_assets
-            (
-                asset_code,
-                asset_type,
-                category_id,
-                asset_name,
+    const [result] = await db.query(`
+        INSERT INTO hardware_assets
+        (
+            asset_code,
+            asset_type,
+            category_id,
+            asset_name,
+            brand,
+            model,
+            serial_number,
+            processor,
+            ram,
+            ram_capacity,
+            storage,
+            storage_spec,
+            operating_system,
+            configuration_specs,
+            vendor_id,
+            vendor_name,
+            purchase_date,
+            purchase_cost,
+            invoice_number,
+            warranty_expiry,
+            warranty_status,
+            department,
+            location_id,
+            floor,
+            current_employee_id,
+            assigned_date,
+            returned_date,
+            asset_status,
+            remarks,
+            warranty_document_name,
+            warranty_document_path
+        )
+        VALUES
+        (
+            ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?, ?,
+            ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?,
+            ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?,
+            ?, ?
+        )
+    `, [
+        asset.asset_code,
+        asset.asset_type || null,
+        asset.category_id,
+        asset.asset_name,
+        asset.brand || null,
+        asset.model || null,
+        asset.serial_number || null,
+        asset.processor || null,
+        asset.ram || null,
+        asset.ram_capacity || null,
+        asset.storage || null,
+        asset.storage_spec || null,
+        asset.operating_system || null,
+        asset.configuration_specs || null,
+        asset.vendor_id || null,
+        asset.vendor_name || null,
+        asset.purchase_date || null,
+        asset.purchase_cost || null,
+        asset.invoice_number || null,
+        asset.warranty_expiry || null,
+        asset.warranty_status || "Unknown",
+        asset.department || null,
+        asset.location_id,
+        asset.floor || null,
+        asset.current_employee_id || null,
+        asset.assigned_date || null,
+        asset.returned_date || null,
+        asset.asset_status || "In Stock",
+        asset.remarks || null,
+        asset.warranty_document_name || null,
+        asset.warranty_document_path || null
+    ]);
 
-                brand,
-                model,
-                serial_number,
-
-                processor,
-                ram,
-                ram_capacity,
-                storage,
-                storage_spec,
-                operating_system,
-
-                configuration_specs,
-
-                vendor_id,
-                vendor_name,
-
-                purchase_date,
-                purchase_cost,
-                invoice_number,
-
-                warranty_expiry,
-                warranty_status,
-
-                department,
-
-                location_id,
-                floor,
-
-                asset_status,
-                remarks,
-
-                warranty_document_name,
-                warranty_document_path
-            )
-
-            VALUES
-            (
-                ?, ?, ?, ?,
-                ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?,
-                ?, ?,
-                ?, ?, ?,
-                ?, ?,
-                ?,
-                ?, ?,
-                ?, ?,
-                ?, ?
-            )
-        `,
-        [
-
-            asset.asset_code,
-            asset.asset_type || null,
-            asset.category_id,
-            asset.asset_name,
-
-            asset.brand || null,
-            asset.model || null,
-            asset.serial_number || null,
-
-            asset.processor || null,
-            asset.ram || null,
-            asset.ram_capacity || null,
-            asset.storage || null,
-            asset.storage_spec || null,
-            asset.operating_system || null,
-
-            asset.configuration_specs || null,
-
-            asset.vendor_id || null,
-            asset.vendor_name || null,
-
-            asset.purchase_date || null,
-            asset.purchase_cost || null,
-            asset.invoice_number || null,
-
-            asset.warranty_expiry || null,
-            asset.warranty_status || "Unknown",
-
-            asset.department || null,
-
-            asset.location_id,
-            asset.floor || null,
-
-            asset.asset_status || "In Stock",
-            asset.remarks || null,
-
-            asset.warranty_document_name || null,
-            asset.warranty_document_path || null
-
-        ]);
-
-
-    return result;
-
+    return result.insertId;
 };
 
 
@@ -338,105 +255,73 @@ const addAsset = async (asset) => {
 
 const updateAsset = async (id, asset) => {
 
-    const [result] =
-        await db.query(`
-            UPDATE hardware_assets
-
-            SET
-
-                asset_code = ?,
-                asset_type = ?,
-                category_id = ?,
-                asset_name = ?,
-
-                brand = ?,
-                model = ?,
-                serial_number = ?,
-
-                processor = ?,
-                ram = ?,
-                ram_capacity = ?,
-                storage = ?,
-                storage_spec = ?,
-                operating_system = ?,
-
-                configuration_specs = ?,
-
-                vendor_id = ?,
-                vendor_name = ?,
-
-                purchase_date = ?,
-                purchase_cost = ?,
-                invoice_number = ?,
-
-                warranty_expiry = ?,
-                warranty_status = ?,
-
-                department = ?,
-
-                location_id = ?,
-                floor = ?,
-
-                current_employee_id = ?,
-                assigned_date = ?,
-                returned_date = ?,
-
-                asset_status = ?,
-
-                remarks = ?
-
-            WHERE asset_id = ?
-        `,
-        [
-
-            asset.asset_code,
-            asset.asset_type || null,
-            asset.category_id,
-            asset.asset_name,
-
-            asset.brand || null,
-            asset.model || null,
-            asset.serial_number || null,
-
-            asset.processor || null,
-            asset.ram || null,
-            asset.ram_capacity || null,
-            asset.storage || null,
-            asset.storage_spec || null,
-            asset.operating_system || null,
-
-            asset.configuration_specs || null,
-
-            asset.vendor_id || null,
-            asset.vendor_name || null,
-
-            asset.purchase_date || null,
-            asset.purchase_cost || null,
-            asset.invoice_number || null,
-
-            asset.warranty_expiry || null,
-            asset.warranty_status || "Unknown",
-
-            asset.department || null,
-
-            asset.location_id,
-            asset.floor || null,
-
-            asset.current_employee_id || null,
-            asset.assigned_date || null,
-            asset.returned_date || null,
-
-            asset.asset_status || "In Stock",
-
-            asset.remarks || null,
-
-            id
-
-        ]);
-
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            asset_code = ?,
+            asset_type = ?,
+            category_id = ?,
+            asset_name = ?,
+            brand = ?,
+            model = ?,
+            serial_number = ?,
+            processor = ?,
+            ram = ?,
+            ram_capacity = ?,
+            storage = ?,
+            storage_spec = ?,
+            operating_system = ?,
+            configuration_specs = ?,
+            vendor_id = ?,
+            vendor_name = ?,
+            purchase_date = ?,
+            purchase_cost = ?,
+            invoice_number = ?,
+            warranty_expiry = ?,
+            warranty_status = ?,
+            department = ?,
+            location_id = ?,
+            floor = ?,
+            current_employee_id = ?,
+            assigned_date = ?,
+            returned_date = ?,
+            asset_status = ?,
+            remarks = ?
+        WHERE asset_id = ?
+    `, [
+        asset.asset_code,
+        asset.asset_type || null,
+        asset.category_id,
+        asset.asset_name,
+        asset.brand || null,
+        asset.model || null,
+        asset.serial_number || null,
+        asset.processor || null,
+        asset.ram || null,
+        asset.ram_capacity || null,
+        asset.storage || null,
+        asset.storage_spec || null,
+        asset.operating_system || null,
+        asset.configuration_specs || null,
+        asset.vendor_id || null,
+        asset.vendor_name || null,
+        asset.purchase_date || null,
+        asset.purchase_cost || null,
+        asset.invoice_number || null,
+        asset.warranty_expiry || null,
+        asset.warranty_status || "Unknown",
+        asset.department || null,
+        asset.location_id,
+        asset.floor || null,
+        asset.current_employee_id || null,
+        asset.assigned_date || null,
+        asset.returned_date || null,
+        asset.asset_status || "In Stock",
+        asset.remarks || null,
+        id
+    ]);
 
     return result;
-
 };
 
 
@@ -444,31 +329,21 @@ const updateAsset = async (id, asset) => {
 // UPDATE WARRANTY DOCUMENT
 // =====================================================
 
-const updateWarrantyDocument = async (
-    id,
-    documentName,
-    documentPath
-) => {
+const updateWarrantyDocument = async (id, documentName, documentPath) => {
 
-    const [result] =
-        await db.query(`
-            UPDATE hardware_assets
-
-            SET
-                warranty_document_name = ?,
-                warranty_document_path = ?
-
-            WHERE asset_id = ?
-        `,
-        [
-            documentName,
-            documentPath,
-            id
-        ]);
-
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            warranty_document_name = ?,
+            warranty_document_path = ?
+        WHERE asset_id = ?
+    `, [
+        documentName,
+        documentPath,
+        id
+    ]);
 
     return result;
-
 };
 
 
@@ -478,17 +353,12 @@ const updateWarrantyDocument = async (
 
 const deleteAsset = async (id) => {
 
-    const [result] =
-        await db.query(`
-            DELETE FROM hardware_assets
-
-            WHERE asset_id = ?
-        `,
-        [id]);
-
+    const [result] = await db.query(`
+        DELETE FROM hardware_assets
+        WHERE asset_id = ?
+    `, [id]);
 
     return result;
-
 };
 
 
@@ -496,21 +366,15 @@ const deleteAsset = async (id) => {
 // CHANGE STATUS
 // =====================================================
 
-const updateAssetStatus = async (
-    id,
-    status
-) => {
+const updateAssetStatus = async (id, status) => {
 
     let query = `
         UPDATE hardware_assets
-
         SET
             asset_status = ?
     `;
 
-
     const params = [status];
-
 
     if (
         status === "In Stock" ||
@@ -519,32 +383,21 @@ const updateAssetStatus = async (
         status === "Scrap" ||
         status === "Lost"
     ) {
-
         query += `,
             current_employee_id = NULL,
             returned_date = CURDATE()
         `;
-
     }
-
 
     query += `
         WHERE asset_id = ?
     `;
 
-
     params.push(id);
 
-
-    const [result] =
-        await db.query(
-            query,
-            params
-        );
-
+    const [result] = await db.query(query, params);
 
     return result;
-
 };
 
 
@@ -554,22 +407,16 @@ const updateAssetStatus = async (
 
 const scrapAsset = async (id) => {
 
-    const [result] =
-        await db.query(`
-            UPDATE hardware_assets
-
-            SET
-                asset_status = 'Scrap',
-                current_employee_id = NULL,
-                returned_date = CURDATE()
-
-            WHERE asset_id = ?
-        `,
-        [id]);
-
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            asset_status = 'Scrap',
+            current_employee_id = NULL,
+            returned_date = CURDATE()
+        WHERE asset_id = ?
+    `, [id]);
 
     return result;
-
 };
 
 
@@ -577,31 +424,22 @@ const scrapAsset = async (id) => {
 // ASSIGN ASSET
 // =====================================================
 
-const assignAsset = async (
-    assetId,
-    employeeId
-) => {
+const assignAsset = async (assetId, employeeId) => {
 
-    const [result] =
-        await db.query(`
-            UPDATE hardware_assets
-
-            SET
-                current_employee_id = ?,
-                assigned_date = CURDATE(),
-                returned_date = NULL,
-                asset_status = 'Assigned'
-
-            WHERE asset_id = ?
-        `,
-        [
-            employeeId,
-            assetId
-        ]);
-
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            current_employee_id = ?,
+            assigned_date = CURDATE(),
+            returned_date = NULL,
+            asset_status = 'Assigned'
+        WHERE asset_id = ?
+    `, [
+        employeeId,
+        assetId
+    ]);
 
     return result;
-
 };
 
 
@@ -611,22 +449,16 @@ const assignAsset = async (
 
 const returnAsset = async (assetId) => {
 
-    const [result] =
-        await db.query(`
-            UPDATE hardware_assets
-
-            SET
-                current_employee_id = NULL,
-                returned_date = CURDATE(),
-                asset_status = 'In Stock'
-
-            WHERE asset_id = ?
-        `,
-        [assetId]);
-
+    const [result] = await db.query(`
+        UPDATE hardware_assets
+        SET
+            current_employee_id = NULL,
+            returned_date = CURDATE(),
+            asset_status = 'In Stock'
+        WHERE asset_id = ?
+    `, [assetId]);
 
     return result;
-
 };
 
 
@@ -634,12 +466,7 @@ const returnAsset = async (assetId) => {
 // ASSET HISTORY
 // =====================================================
 
-const addAssetHistory = async (
-    assetId,
-    employeeId,
-    actionType,
-    remarks = null
-) => {
+const addAssetHistory = async (history) => {
 
     await db.query(`
         INSERT INTO asset_history
@@ -650,17 +477,14 @@ const addAssetHistory = async (
             action_date,
             remarks
         )
-
         VALUES
         (?, ?, ?, NOW(), ?)
-    `,
-    [
-        assetId,
-        employeeId,
-        actionType,
-        remarks
+    `, [
+        history.asset_id,
+        history.employee_id || null,
+        history.action_type,
+        history.remarks || null
     ]);
-
 };
 
 
@@ -668,46 +492,31 @@ const addAssetHistory = async (
 // EXPORT DATA
 // =====================================================
 
-const getAssetsForExport = async (
-    assetType = null
-) => {
+const getAssetsForExport = async (assetType = null) => {
 
     let query = `
         SELECT
-
             h.asset_code,
             h.asset_type,
             h.model,
-
             h.configuration_specs,
-
             h.ram,
             h.ram_capacity,
-
             h.storage,
             h.storage_spec,
-
             e.display_name AS employee_name,
             e.employee_id AS employee_id,
-
             h.asset_status,
-
             h.purchase_date,
             h.warranty_expiry,
-
             h.purchase_cost,
-
             h.department
-
         FROM hardware_assets h
-
         LEFT JOIN employees e
             ON h.current_employee_id = e.employee_id
     `;
 
-
     const params = [];
-
 
     if (
         assetType &&
@@ -715,53 +524,37 @@ const getAssetsForExport = async (
         assetType !== "all" &&
         assetType !== "ALL"
     ) {
-
         query += `
             WHERE h.asset_type = ?
         `;
-
         params.push(assetType);
-
     }
-
 
     query += `
         ORDER BY h.asset_code ASC
     `;
 
-
-    const [rows] =
-        await db.query(
-            query,
-            params
-        );
-
+    const [rows] = await db.query(query, params);
 
     return rows;
-
 };
 
 
-module.exports = {
+// =====================================================
+// EXPORTS
+// =====================================================
 
+module.exports = {
     getAllAssets,
     getAssetById,
-
     addAsset,
     updateAsset,
-
     updateWarrantyDocument,
-
     deleteAsset,
-
     updateAssetStatus,
     scrapAsset,
-
     assignAsset,
     returnAsset,
-
     addAssetHistory,
-
     getAssetsForExport
-
 };
