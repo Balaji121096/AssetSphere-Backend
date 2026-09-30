@@ -57,8 +57,13 @@ const getAllAssets = async (assetType = null) => {
             h.designation,
 
             h.current_employee_id,
-            e.display_name,
-            e.employee_id,
+            current_emp.display_name AS display_name,
+            current_emp.employee_id,
+            current_emp.employee_code,
+
+            h.last_user_id,
+            last_emp.display_name AS last_user_display_name,
+            last_emp.employee_code AS last_user_employee_code,
 
             h.assigned_date,
             h.returned_date,
@@ -81,8 +86,11 @@ const getAllAssets = async (assetType = null) => {
         LEFT JOIN asset_categories c
             ON h.category_id = c.category_id
 
-        LEFT JOIN employees e
-            ON h.current_employee_id = e.employee_id
+        LEFT JOIN employees current_emp
+            ON h.current_employee_id = current_emp.employee_id
+
+        LEFT JOIN employees last_emp
+            ON h.last_user_id = last_emp.employee_id
 
         LEFT JOIN vendors v
             ON h.vendor_id = v.vendor_id
@@ -105,10 +113,7 @@ const getAllAssets = async (assetType = null) => {
 
     query += ` ORDER BY h.asset_code ASC `;
 
-    const [rows] = await db.query(
-        query,
-        params
-    );
+    const [rows] = await db.query(query, params);
 
     return rows;
 };
@@ -166,8 +171,13 @@ const getAssetById = async (id) => {
             h.designation,
 
             h.current_employee_id,
-            e.display_name,
-            e.employee_id,
+            current_emp.display_name AS display_name,
+            current_emp.employee_id,
+            current_emp.employee_code,
+
+            h.last_user_id,
+            last_emp.display_name AS last_user_display_name,
+            last_emp.employee_code AS last_user_employee_code,
 
             h.assigned_date,
             h.returned_date,
@@ -190,8 +200,11 @@ const getAssetById = async (id) => {
         LEFT JOIN asset_categories c
             ON h.category_id = c.category_id
 
-        LEFT JOIN employees e
-            ON h.current_employee_id = e.employee_id
+        LEFT JOIN employees current_emp
+            ON h.current_employee_id = current_emp.employee_id
+
+        LEFT JOIN employees last_emp
+            ON h.last_user_id = last_emp.employee_id
 
         LEFT JOIN vendors v
             ON h.vendor_id = v.vendor_id
@@ -213,14 +226,20 @@ const getAssetById = async (id) => {
 // =====================================================
 
 const addAsset = async (asset) => {
+
     let assignedDate = null;
     let returnedDate = null;
-    
+
     if (asset.current_employee_id) {
-        assignedDate = new Date().toISOString().split('T')[0];
+        assignedDate = new Date().toISOString().split("T")[0];
     }
-    
-    if (asset.asset_status === 'In Stock' || asset.asset_status === 'Repair' || asset.asset_status === 'Scrap' || asset.asset_status === 'Lost') {
+
+    if (
+        asset.asset_status === "In Stock" ||
+        asset.asset_status === "Repair" ||
+        asset.asset_status === "Scrap" ||
+        asset.asset_status === "Lost"
+    ) {
         asset.current_employee_id = null;
         assignedDate = null;
     }
@@ -228,37 +247,104 @@ const addAsset = async (asset) => {
     const [result] = await db.query(`
         INSERT INTO hardware_assets
         (
-            asset_code, asset_type, category_id, asset_name,
-            brand, model, serial_number,
-            processor, ram, storage, storage_spec, operating_system,
-            
-            warranty_started, warranty_expiry,
-            
-            department, designation, location_id, floor,
-            current_employee_id, assigned_date, returned_date,
-            
-            asset_status, remarks,
-            
-            warranty_document_name, warranty_document_path
+            asset_code,
+            asset_type,
+            category_id,
+            asset_name,
+
+            brand,
+            model,
+            serial_number,
+
+            processor,
+            ram,
+            storage,
+            storage_spec,
+            operating_system,
+
+            warranty_started,
+            warranty_expiry,
+
+            department,
+            designation,
+            location_id,
+            floor,
+
+            current_employee_id,
+            last_user_id,
+
+            assigned_date,
+            returned_date,
+
+            asset_status,
+            remarks,
+
+            warranty_document_name,
+            warranty_document_path
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+        VALUES
+        (
+            ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?,
+            ?, ?, ?, ?,
+            ?, ?,
+            ?, ?,
+            ?, ?,
+            ?, ?
+        )
     `, [
-        asset.asset_code, asset.asset_type || null, asset.category_id, asset.asset_name || (asset.brand + " " + asset.model),
-        asset.brand || null, asset.model || null, asset.serial_number || null,
-        asset.processor || null, asset.ram || null, asset.storage || null, asset.storage_spec || null, asset.operating_system || null,
-        
-        asset.warranty_started || null, asset.warranty_expiry || null,
-        
-        asset.department || null, asset.designation || null, asset.location_id, asset.floor || null,
-        asset.current_employee_id || null, assignedDate, returnedDate,
-        
-        asset.asset_status || "In Stock", asset.remarks || null,
-        
-        asset.warranty_document_name || null, asset.warranty_document_path || null
+        asset.asset_code,
+        asset.asset_type || null,
+        asset.category_id,
+        asset.asset_name || `${asset.brand || ""} ${asset.model || ""}`.trim(),
+
+        asset.brand || null,
+        asset.model || null,
+        asset.serial_number || null,
+
+        asset.processor || null,
+        asset.ram || null,
+        asset.storage || null,
+        asset.storage_spec || null,
+        asset.operating_system || null,
+
+        asset.warranty_started || null,
+        asset.warranty_expiry || null,
+
+        asset.department || null,
+        asset.designation || null,
+        asset.location_id || null,
+        asset.floor || null,
+
+        asset.current_employee_id || null,
+        asset.last_user_id || null,
+
+        assignedDate,
+        returnedDate,
+
+        asset.asset_status || "In Stock",
+        asset.remarks || null,
+
+        asset.warranty_document_name || null,
+        asset.warranty_document_path || null
     ]);
 
+
+    // =================================================
+    // HISTORY
+    // =================================================
+
     if (asset.current_employee_id) {
-        await addAssetHistory(result.insertId, asset.current_employee_id, 'Assigned', 'Assigned during asset creation');
+
+        await addAssetHistory(
+            result.insertId,
+            asset.current_employee_id,
+            "Assigned",
+            "Assigned during asset creation"
+        );
     }
 
     return result;
@@ -270,59 +356,223 @@ const addAsset = async (asset) => {
 // =====================================================
 
 const updateAsset = async (id, asset) => {
-    
-    const [currentAsset] = await db.query('SELECT current_employee_id, assigned_date FROM hardware_assets WHERE asset_id = ?', [id]);
-    
-    let assignedDate = currentAsset[0].assigned_date;
+
+    const [currentRows] = await db.query(
+        `
+        SELECT
+            current_employee_id,
+            last_user_id,
+            assigned_date
+        FROM hardware_assets
+        WHERE asset_id = ?
+        `,
+        [id]
+    );
+
+    if (!currentRows.length) {
+        throw new Error("Asset not found");
+    }
+
+    const currentAsset = currentRows[0];
+
+    let assignedDate = currentAsset.assigned_date;
     let returnedDate = null;
 
-    if (asset.current_employee_id && asset.current_employee_id !== currentAsset[0].current_employee_id) {
-        assignedDate = new Date().toISOString().split('T')[0];
-    } else if (!asset.current_employee_id) {
-        assignedDate = null;
-    }
-    
-    if (asset.asset_status === 'In Stock' || asset.asset_status === 'Repair' || asset.asset_status === 'Scrap' || asset.asset_status === 'Lost') {
-        if (currentAsset[0].current_employee_id) {
-            returnedDate = new Date().toISOString().split('T')[0];
+    const oldEmployeeId = currentAsset.current_employee_id;
+    const newEmployeeId = asset.current_employee_id || null;
+
+    let lastUserId =
+        asset.last_user_id ||
+        currentAsset.last_user_id ||
+        null;
+
+
+    // =================================================
+    // EMPLOYEE CHANGED
+    // =================================================
+
+    if (
+        newEmployeeId &&
+        newEmployeeId !== oldEmployeeId
+    ) {
+
+        // Previous current employee becomes Last User
+        if (oldEmployeeId) {
+            lastUserId = oldEmployeeId;
         }
+
+        assignedDate = new Date()
+            .toISOString()
+            .split("T")[0];
+    }
+
+
+    // =================================================
+    // EMPLOYEE REMOVED
+    // =================================================
+
+    if (!newEmployeeId) {
+
+        assignedDate = null;
+
+        if (oldEmployeeId) {
+            lastUserId = oldEmployeeId;
+            returnedDate = new Date()
+                .toISOString()
+                .split("T")[0];
+        }
+    }
+
+
+    // =================================================
+    // NON-ASSIGNABLE STATUS
+    // =================================================
+
+    if (
+        asset.asset_status === "In Stock" ||
+        asset.asset_status === "Repair" ||
+        asset.asset_status === "Scrap" ||
+        asset.asset_status === "Lost"
+    ) {
+
+        if (oldEmployeeId) {
+
+            lastUserId = oldEmployeeId;
+
+            returnedDate = new Date()
+                .toISOString()
+                .split("T")[0];
+        }
+
         asset.current_employee_id = null;
         assignedDate = null;
     }
 
+
+    const finalEmployeeId =
+        asset.current_employee_id || null;
+
+
+    // =================================================
+    // UPDATE
+    // =================================================
+
     const [result] = await db.query(`
         UPDATE hardware_assets
+
         SET
-            asset_code = ?, asset_type = ?, category_id = ?, asset_name = ?,
-            brand = ?, model = ?, serial_number = ?,
-            processor = ?, ram = ?, storage = ?, storage_spec = ?, operating_system = ?,
-            
-            warranty_started = ?, warranty_expiry = ?,
-            
-            department = ?, designation = ?, location_id = ?, floor = ?,
-            current_employee_id = ?, assigned_date = ?, returned_date = ?,
-            
-            asset_status = ?, remarks = ?
+            asset_code = ?,
+            asset_type = ?,
+            category_id = ?,
+            asset_name = ?,
+
+            brand = ?,
+            model = ?,
+            serial_number = ?,
+
+            processor = ?,
+            ram = ?,
+            storage = ?,
+            storage_spec = ?,
+            operating_system = ?,
+
+            warranty_started = ?,
+            warranty_expiry = ?,
+
+            department = ?,
+            designation = ?,
+            location_id = ?,
+            floor = ?,
+
+            current_employee_id = ?,
+            last_user_id = ?,
+
+            assigned_date = ?,
+            returned_date = ?,
+
+            asset_status = ?,
+            remarks = ?
+
         WHERE asset_id = ?
     `, [
-        asset.asset_code, asset.asset_type || null, asset.category_id, asset.asset_name || (asset.brand + " " + asset.model),
-        asset.brand || null, asset.model || null, asset.serial_number || null,
-        asset.processor || null, asset.ram || null, asset.storage || null, asset.storage_spec || null, asset.operating_system || null,
-        
-        asset.warranty_started || null, asset.warranty_expiry || null,
-        
-        asset.department || null, asset.designation || null, asset.location_id, asset.floor || null,
-        asset.current_employee_id || null, assignedDate, returnedDate,
-        
-        asset.asset_status || "In Stock", asset.remarks || null,
+        asset.asset_code,
+        asset.asset_type || null,
+        asset.category_id,
+        asset.asset_name ||
+            `${asset.brand || ""} ${asset.model || ""}`.trim(),
+
+        asset.brand || null,
+        asset.model || null,
+        asset.serial_number || null,
+
+        asset.processor || null,
+        asset.ram || null,
+        asset.storage || null,
+        asset.storage_spec || null,
+        asset.operating_system || null,
+
+        asset.warranty_started || null,
+        asset.warranty_expiry || null,
+
+        asset.department || null,
+        asset.designation || null,
+        asset.location_id || null,
+        asset.floor || null,
+
+        finalEmployeeId,
+        lastUserId,
+
+        assignedDate,
+        returnedDate,
+
+        asset.asset_status || "In Stock",
+        asset.remarks || null,
+
         id
     ]);
 
-    if (asset.current_employee_id && asset.current_employee_id !== currentAsset[0].current_employee_id) {
-        await addAssetHistory(id, asset.current_employee_id, 'Assigned', 'Assigned during asset update');
-    } else if (!asset.current_employee_id && currentAsset[0].current_employee_id) {
-        await addAssetHistory(id, currentAsset[0].current_employee_id, 'Returned', 'Returned during asset update');
+
+    // =================================================
+    // HISTORY
+    // =================================================
+
+    if (
+        finalEmployeeId &&
+        finalEmployeeId !== oldEmployeeId
+    ) {
+
+        if (oldEmployeeId) {
+
+            await addAssetHistory(
+                id,
+                oldEmployeeId,
+                "Transferred",
+                `Asset transferred from employee ${oldEmployeeId} to employee ${finalEmployeeId}`
+            );
+
+        } else {
+
+            await addAssetHistory(
+                id,
+                finalEmployeeId,
+                "Assigned",
+                "Assigned during asset update"
+            );
+        }
+
+    } else if (
+        !finalEmployeeId &&
+        oldEmployeeId
+    ) {
+
+        await addAssetHistory(
+            id,
+            oldEmployeeId,
+            "Returned",
+            "Returned during asset update"
+        );
     }
+
 
     return result;
 };
@@ -391,6 +641,7 @@ const updateAssetStatus = async (id, status) => {
         status === "Scrap" ||
         status === "Lost"
     ) {
+
         query += `,
             current_employee_id = NULL,
             returned_date = CURDATE()
@@ -442,11 +693,34 @@ const assignAsset = async (
     employeeId
 ) => {
 
+    // Get current employee first
+    const [rows] = await db.query(
+        `
+        SELECT current_employee_id
+        FROM hardware_assets
+        WHERE asset_id = ?
+        `,
+        [assetId]
+    );
+
+    const oldEmployeeId =
+        rows[0]?.current_employee_id || null;
+
+
+    // Previous user becomes Last User
+    const lastUserId =
+        oldEmployeeId &&
+        oldEmployeeId !== employeeId
+            ? oldEmployeeId
+            : null;
+
+
     const [result] = await db.query(`
         UPDATE hardware_assets
 
         SET
             current_employee_id = ?,
+            last_user_id = COALESCE(?, last_user_id),
             assigned_date = CURDATE(),
             returned_date = NULL,
             asset_status = 'Assigned'
@@ -454,8 +728,20 @@ const assignAsset = async (
         WHERE asset_id = ?
     `, [
         employeeId,
+        lastUserId,
         assetId
     ]);
+
+
+    await addAssetHistory(
+        assetId,
+        employeeId,
+        oldEmployeeId ? "Transferred" : "Assigned",
+        oldEmployeeId
+            ? `Asset transferred from employee ${oldEmployeeId} to employee ${employeeId}`
+            : "Asset assigned"
+    );
+
 
     return result;
 };
@@ -467,16 +753,45 @@ const assignAsset = async (
 
 const returnAsset = async (assetId) => {
 
+    const [rows] = await db.query(
+        `
+        SELECT current_employee_id
+        FROM hardware_assets
+        WHERE asset_id = ?
+        `,
+        [assetId]
+    );
+
+    const oldEmployeeId =
+        rows[0]?.current_employee_id || null;
+
+
     const [result] = await db.query(`
         UPDATE hardware_assets
 
         SET
             current_employee_id = NULL,
+            last_user_id = COALESCE(?, last_user_id),
             returned_date = CURDATE(),
             asset_status = 'In Stock'
 
         WHERE asset_id = ?
-    `, [assetId]);
+    `, [
+        oldEmployeeId,
+        assetId
+    ]);
+
+
+    if (oldEmployeeId) {
+
+        await addAssetHistory(
+            assetId,
+            oldEmployeeId,
+            "Returned",
+            "Asset returned"
+        );
+    }
+
 
     return result;
 };
@@ -504,10 +819,16 @@ const addAssetHistory = async (
         )
 
         VALUES
-        (?, ?, ?, NOW(), ?)
+        (
+            ?,
+            ?,
+            ?,
+            NOW(),
+            ?
+        )
     `, [
         assetId,
-        employeeId,
+        employeeId || null,
         actionType,
         remarks
     ]);
@@ -535,8 +856,11 @@ const getAssetsForExport = async (assetType = null) => {
             h.storage,
             h.storage_spec,
 
-            e.display_name AS employee_name,
-            e.employee_id AS employee_id,
+            current_emp.display_name AS employee_name,
+            current_emp.employee_id AS employee_id,
+
+            last_emp.display_name AS last_user_name,
+            last_emp.employee_id AS last_user_id,
 
             h.asset_status,
 
@@ -550,8 +874,11 @@ const getAssetsForExport = async (assetType = null) => {
 
         FROM hardware_assets h
 
-        LEFT JOIN employees e
-            ON h.current_employee_id = e.employee_id
+        LEFT JOIN employees current_emp
+            ON h.current_employee_id = current_emp.employee_id
+
+        LEFT JOIN employees last_emp
+            ON h.last_user_id = last_emp.employee_id
     `;
 
     const params = [];
@@ -582,6 +909,10 @@ const getAssetsForExport = async (assetType = null) => {
     return rows;
 };
 
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = {
 
