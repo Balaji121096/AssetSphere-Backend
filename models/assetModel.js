@@ -49,10 +49,12 @@ const getAllAssets = async (assetType = null) => {
             h.purchase_cost,
             h.invoice_number,
 
+            h.warranty_started,
             h.warranty_expiry,
             h.warranty_status,
 
             h.department,
+            h.designation,
 
             h.current_employee_id,
             e.display_name,
@@ -156,10 +158,12 @@ const getAssetById = async (id) => {
             h.purchase_cost,
             h.invoice_number,
 
+            h.warranty_started,
             h.warranty_expiry,
             h.warranty_status,
 
             h.department,
+            h.designation,
 
             h.current_employee_id,
             e.display_name,
@@ -209,105 +213,53 @@ const getAssetById = async (id) => {
 // =====================================================
 
 const addAsset = async (asset) => {
+    let assignedDate = null;
+    let returnedDate = null;
+    
+    if (asset.current_employee_id) {
+        assignedDate = new Date().toISOString().split('T')[0];
+    }
+    
+    if (asset.asset_status === 'In Stock' || asset.asset_status === 'Repair' || asset.asset_status === 'Scrap' || asset.asset_status === 'Lost') {
+        asset.current_employee_id = null;
+        assignedDate = null;
+    }
 
     const [result] = await db.query(`
         INSERT INTO hardware_assets
         (
-            asset_code,
-            asset_type,
-            category_id,
-            asset_name,
-
-            brand,
-            model,
-            serial_number,
-
-            processor,
-            ram,
-            ram_capacity,
-            storage,
-            storage_spec,
-            operating_system,
-
-            configuration_specs,
-
-            vendor_id,
-            vendor_name,
-
-            purchase_date,
-            purchase_cost,
-            invoice_number,
-
-            warranty_expiry,
-            warranty_status,
-
-            department,
-
-            location_id,
-            floor,
-
-            asset_status,
-            remarks,
-
-            warranty_document_name,
-            warranty_document_path
+            asset_code, asset_type, category_id, asset_name,
+            brand, model, serial_number,
+            processor, ram, storage, storage_spec, operating_system,
+            
+            warranty_started, warranty_expiry,
+            
+            department, designation, location_id, floor,
+            current_employee_id, assigned_date, returned_date,
+            
+            asset_status, remarks,
+            
+            warranty_document_name, warranty_document_path
         )
-
-        VALUES
-        (
-            ?, ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?, ?, ?, ?,
-            ?,
-            ?, ?,
-            ?, ?, ?,
-            ?, ?,
-            ?,
-            ?, ?,
-            ?, ?,
-            ?, ?
-        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-
-        asset.asset_code,
-        asset.asset_type || null,
-        asset.category_id,
-        asset.asset_name,
-
-        asset.brand || null,
-        asset.model || null,
-        asset.serial_number || null,
-
-        asset.processor || null,
-        asset.ram || null,
-        asset.ram_capacity || null,
-        asset.storage || null,
-        asset.storage_spec || null,
-        asset.operating_system || null,
-
-        asset.configuration_specs || null,
-
-        asset.vendor_id || null,
-        asset.vendor_name || null,
-
-        asset.purchase_date || null,
-        asset.purchase_cost || null,
-        asset.invoice_number || null,
-
-        asset.warranty_expiry || null,
-        asset.warranty_status || "Unknown",
-
-        asset.department || null,
-
-        asset.location_id,
-        asset.floor || null,
-
-        asset.asset_status || "In Stock",
-        asset.remarks || null,
-
-        asset.warranty_document_name || null,
-        asset.warranty_document_path || null
+        asset.asset_code, asset.asset_type || null, asset.category_id, asset.asset_name || (asset.brand + " " + asset.model),
+        asset.brand || null, asset.model || null, asset.serial_number || null,
+        asset.processor || null, asset.ram || null, asset.storage || null, asset.storage_spec || null, asset.operating_system || null,
+        
+        asset.warranty_started || null, asset.warranty_expiry || null,
+        
+        asset.department || null, asset.designation || null, asset.location_id, asset.floor || null,
+        asset.current_employee_id || null, assignedDate, returnedDate,
+        
+        asset.asset_status || "In Stock", asset.remarks || null,
+        
+        asset.warranty_document_name || null, asset.warranty_document_path || null
     ]);
+
+    if (asset.current_employee_id) {
+        await addAssetHistory(result.insertId, asset.current_employee_id, 'Assigned', 'Assigned during asset creation');
+    }
 
     return result;
 };
@@ -318,99 +270,59 @@ const addAsset = async (asset) => {
 // =====================================================
 
 const updateAsset = async (id, asset) => {
+    
+    const [currentAsset] = await db.query('SELECT current_employee_id, assigned_date FROM hardware_assets WHERE asset_id = ?', [id]);
+    
+    let assignedDate = currentAsset[0].assigned_date;
+    let returnedDate = null;
+
+    if (asset.current_employee_id && asset.current_employee_id !== currentAsset[0].current_employee_id) {
+        assignedDate = new Date().toISOString().split('T')[0];
+    } else if (!asset.current_employee_id) {
+        assignedDate = null;
+    }
+    
+    if (asset.asset_status === 'In Stock' || asset.asset_status === 'Repair' || asset.asset_status === 'Scrap' || asset.asset_status === 'Lost') {
+        if (currentAsset[0].current_employee_id) {
+            returnedDate = new Date().toISOString().split('T')[0];
+        }
+        asset.current_employee_id = null;
+        assignedDate = null;
+    }
 
     const [result] = await db.query(`
         UPDATE hardware_assets
-
         SET
-
-            asset_code = ?,
-            asset_type = ?,
-            category_id = ?,
-            asset_name = ?,
-
-            brand = ?,
-            model = ?,
-            serial_number = ?,
-
-            processor = ?,
-            ram = ?,
-            ram_capacity = ?,
-            storage = ?,
-            storage_spec = ?,
-            operating_system = ?,
-
-            configuration_specs = ?,
-
-            vendor_id = ?,
-            vendor_name = ?,
-
-            purchase_date = ?,
-            purchase_cost = ?,
-            invoice_number = ?,
-
-            warranty_expiry = ?,
-            warranty_status = ?,
-
-            department = ?,
-
-            location_id = ?,
-            floor = ?,
-
-            current_employee_id = ?,
-            assigned_date = ?,
-            returned_date = ?,
-
-            asset_status = ?,
-
-            remarks = ?
-
+            asset_code = ?, asset_type = ?, category_id = ?, asset_name = ?,
+            brand = ?, model = ?, serial_number = ?,
+            processor = ?, ram = ?, storage = ?, storage_spec = ?, operating_system = ?,
+            
+            warranty_started = ?, warranty_expiry = ?,
+            
+            department = ?, designation = ?, location_id = ?, floor = ?,
+            current_employee_id = ?, assigned_date = ?, returned_date = ?,
+            
+            asset_status = ?, remarks = ?
         WHERE asset_id = ?
     `, [
-
-        asset.asset_code,
-        asset.asset_type || null,
-        asset.category_id,
-        asset.asset_name,
-
-        asset.brand || null,
-        asset.model || null,
-        asset.serial_number || null,
-
-        asset.processor || null,
-        asset.ram || null,
-        asset.ram_capacity || null,
-        asset.storage || null,
-        asset.storage_spec || null,
-        asset.operating_system || null,
-
-        asset.configuration_specs || null,
-
-        asset.vendor_id || null,
-        asset.vendor_name || null,
-
-        asset.purchase_date || null,
-        asset.purchase_cost || null,
-        asset.invoice_number || null,
-
-        asset.warranty_expiry || null,
-        asset.warranty_status || "Unknown",
-
-        asset.department || null,
-
-        asset.location_id,
-        asset.floor || null,
-
-        asset.current_employee_id || null,
-        asset.assigned_date || null,
-        asset.returned_date || null,
-
-        asset.asset_status || "In Stock",
-
-        asset.remarks || null,
-
+        asset.asset_code, asset.asset_type || null, asset.category_id, asset.asset_name || (asset.brand + " " + asset.model),
+        asset.brand || null, asset.model || null, asset.serial_number || null,
+        asset.processor || null, asset.ram || null, asset.storage || null, asset.storage_spec || null, asset.operating_system || null,
+        
+        asset.warranty_started || null, asset.warranty_expiry || null,
+        
+        asset.department || null, asset.designation || null, asset.location_id, asset.floor || null,
+        asset.current_employee_id || null, assignedDate, returnedDate,
+        
+        asset.asset_status || "In Stock", asset.remarks || null,
         id
     ]);
+
+    if (asset.current_employee_id && asset.current_employee_id !== currentAsset[0].current_employee_id) {
+        await addAssetHistory(id, asset.current_employee_id, 'Assigned', 'Assigned during asset update');
+    } else if (!asset.current_employee_id && currentAsset[0].current_employee_id) {
+        await addAssetHistory(id, currentAsset[0].current_employee_id, 'Returned', 'Returned during asset update');
+    }
 
     return result;
 };
@@ -629,6 +541,7 @@ const getAssetsForExport = async (assetType = null) => {
             h.asset_status,
 
             h.purchase_date,
+            h.warranty_started,
             h.warranty_expiry,
 
             h.purchase_cost,

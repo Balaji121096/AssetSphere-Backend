@@ -1,5 +1,6 @@
 const employeeModel = require("../models/employeeModel");
-
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 // ===============================
 // GET ALL EMPLOYEES
@@ -83,10 +84,31 @@ const addEmployee = async (req, res) => {
                 req.body
             );
 
+        const employeeId = result.insertId;
+
+        // Auto-create user account if Active
+        const status = req.body.status || "Active";
+        if (status === "Active") {
+            const username = req.body.official_email;
+            if (username) {
+                // Generate a random password
+                const tempPassword = crypto.randomBytes(6).toString("base64url");
+                const hashedPassword = await bcrypt.hash(tempPassword, 10);
+                
+                try {
+                    await employeeModel.createEmployeeUser(employeeId, username, hashedPassword);
+                    console.log(`Auto-created user for employee ${employeeId}. Username: ${username}, Temp Password: ${tempPassword}`);
+                } catch (userError) {
+                    console.error("Failed to auto-create user:", userError);
+                    // We don't fail the employee creation if user creation fails
+                }
+            }
+        }
+
         res.status(201).json({
             success: true,
             message: "Employee added successfully",
-            employee_id: result.insertId
+            employee_id: employeeId
         });
 
     } catch (error) {
@@ -112,9 +134,10 @@ const updateEmployee = async (req, res) => {
 
     try {
 
+        const employeeId = req.params.id;
         const result =
             await employeeModel.updateEmployee(
-                req.params.id,
+                employeeId,
                 req.body
             );
 
@@ -125,6 +148,14 @@ const updateEmployee = async (req, res) => {
                 message: "Employee not found"
             });
 
+        }
+
+        // Sync user status
+        const status = req.body.status || "Active";
+        try {
+            await employeeModel.syncEmployeeUserStatus(employeeId, status);
+        } catch (syncError) {
+            console.error("Failed to sync user status:", syncError);
         }
 
         res.status(200).json({

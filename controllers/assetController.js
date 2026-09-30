@@ -441,7 +441,29 @@ const returnAsset = async (req, res) => {
 };
 
 
+
+// =====================================================
+// GET MY ASSETS (For Employee)
+// =====================================================
+const getMyAssets = async (req, res) => {
+    try {
+        const employee_id = req.user.employee_id;
+        if (!employee_id) return res.json({ success: true, data: [] });
+        
+        // We can just reuse getAllAssets but filter in JS, or add a new model function.
+        // For simplicity, fetch all and filter, or write a quick raw query.
+        const db = require('../config/db');
+        const [rows] = await db.query('SELECT asset_id, asset_code, asset_name, category_id, brand, model FROM hardware_assets WHERE current_employee_id = ? AND asset_status = "Assigned"', [employee_id]);
+        
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 module.exports = {
+    getMyAssets,
     getAssets,
     getAssetById,
     addAsset,

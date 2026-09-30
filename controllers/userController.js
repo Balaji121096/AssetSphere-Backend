@@ -1,6 +1,7 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const db = require("../config/db");
 
 // =====================================================
 // GET ALL USERS
@@ -151,7 +152,8 @@ const addUser = async (req, res) => {
             "Super Admin",
             "Admin",
             "Manager",
-            "Viewer"
+            "Viewer",
+            "Employee"
         ];
 
         if (!allowedRoles.includes(newRole)) {
@@ -352,7 +354,8 @@ const updateUser = async (req, res) => {
             "Super Admin",
             "Admin",
             "Manager",
-            "Viewer"
+            "Viewer",
+            "Employee"
         ];
 
         const newRole =
@@ -950,6 +953,72 @@ const getProfile = async (req, res) => {
 
 
 // =====================================================
+// SYNC EMPLOYEE USERS
+// =====================================================
+
+const syncEmployeeUsers = async (req, res) => {
+    try {
+        if (req.user.role !== "Super Admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Only Super Admin can sync employees"
+            });
+        }
+
+        const [employees] = await db.query(`
+            SELECT e.employee_id, e.official_email
+            FROM employees e
+            LEFT JOIN users u ON e.employee_id = u.employee_id
+            WHERE e.status = 'Active' AND u.user_id IS NULL
+        `);
+
+        let createdCount = 0;
+        let skippedCount = 0;
+        let errors = [];
+        let createdUsers = [];
+
+        for (const emp of employees) {
+            const username = emp.official_email;
+            if (!username) {
+                skippedCount++;
+                continue;
+            }
+
+            const tempPassword = crypto.randomBytes(6).toString("base64url");
+            const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+            try {
+                await db.query(`
+                    INSERT INTO users (employee_id, username, password, role, status, must_change_password)
+                    VALUES (?, ?, ?, 'Employee', 'Active', 1)
+                `, [emp.employee_id, username, hashedPassword]);
+                
+                createdCount++;
+                createdUsers.push({ employee_id: emp.employee_id, username, temporary_password: tempPassword });
+            } catch (err) {
+                errors.push({ employee_id: emp.employee_id, error: err.message });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: "Synchronization complete",
+            created_count: createdCount,
+            skipped_count: skippedCount,
+            errors,
+            created_users: createdUsers
+        });
+
+    } catch (error) {
+        console.error("Sync Employees Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+// =====================================================
 // EXPORT
 // =====================================================
 
@@ -962,5 +1031,6 @@ module.exports = {
     changePassword,
     resetPassword,
     deleteUser,
-    getProfile
+    getProfile,
+    syncEmployeeUsers
 };

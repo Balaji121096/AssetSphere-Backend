@@ -17,6 +17,8 @@ const authRoutes = require("./routes/authRoutes");
 const softwareRoutes = require("./routes/softwareRoutes");
 const vendorDocumentRoutes = require("./routes/vendorDocumentRoutes");
 const purchaseRoutes = require("./routes/purchaseRoutes");
+const companySettingsRoutes = require("./routes/companySettingsRoutes");
+const ticketRoutes = require("./routes/ticketRoutes");
 
 // =====================================================
 // USER ROUTES
@@ -35,6 +37,7 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
+app.use("/uploads", express.static(require("path").join(__dirname, "uploads")));
 
 
 // =====================================================
@@ -67,6 +70,10 @@ app.use(
     departmentRoutes
 );
 
+app.use(
+    "/api/company-settings",
+    companySettingsRoutes
+);
 
 // =====================================================
 // DESIGNATION API
@@ -185,6 +192,16 @@ app.use(
 app.use(
     "/api/purchases",
     purchaseRoutes
+);
+
+
+// =====================================================
+// TICKET API
+// =====================================================
+
+app.use(
+    "/api/tickets",
+    ticketRoutes
 );
 
 

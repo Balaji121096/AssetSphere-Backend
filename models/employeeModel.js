@@ -135,11 +135,38 @@ const deleteEmployee = async (id) => {
     return result;
 };
 
+// GET LINKED USER BY EMPLOYEE ID
+const getLinkedUserByEmployeeId = async (id) => {
+    const [rows] = await db.query(`
+        SELECT user_id, status FROM users WHERE employee_id = ?
+    `, [id]);
+    return rows[0];
+};
+
+// CREATE EMPLOYEE USER
+const createEmployeeUser = async (employeeId, username, hashedPassword) => {
+    const [result] = await db.query(`
+        INSERT INTO users (employee_id, username, password, role, status, must_change_password)
+        VALUES (?, ?, ?, 'Employee', 'Active', 1)
+    `, [employeeId, username, hashedPassword]);
+    return result;
+};
+
+// SYNC EMPLOYEE USER STATUS
+const syncEmployeeUserStatus = async (employeeId, status) => {
+    const [result] = await db.query(`
+        UPDATE users SET status = ? WHERE employee_id = ?
+    `, [status, employeeId]);
+    return result;
+};
 
 module.exports = {
     getAllEmployees,
     addEmployee,
     getEmployeeById,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    getLinkedUserByEmployeeId,
+    createEmployeeUser,
+    syncEmployeeUserStatus
 };

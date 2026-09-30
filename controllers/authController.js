@@ -62,6 +62,19 @@ const login = async (req, res) => {
 
         }
 
+        if (user.role === "Employee" && user.employee_status !== "Active") {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "Linked employee is Inactive. Login disabled."
+
+            });
+
+        }
+
 
         const isMatch =
             await bcrypt.compare(
