@@ -166,7 +166,29 @@ const getTicketStats = async () => {
     return rows[0];
 };
 
+
+const getTicketsByMonth = async (yearMonth) => {
+    const query = `
+        SELECT t.*, e.display_name AS employee_name, e.employee_code, 
+               a.asset_name, a.asset_code, a1.display_name AS assigned_name
+        FROM tickets t
+        JOIN employees e ON t.employee_id = e.employee_id
+        LEFT JOIN hardware_assets a ON t.asset_id = a.asset_id
+        LEFT JOIN employees a1 ON t.assigned_to = a1.employee_id
+        WHERE DATE_FORMAT(t.created_at, '%Y-%m') = ?
+        ORDER BY t.created_at DESC
+    `;
+    const [rows] = await db.query(query, [yearMonth]);
+    return rows;
+};
+
+const getTicketByAttachment = async (filename) => {
+    const [rows] = await db.query('SELECT * FROM tickets WHERE attachment_path = ?', ['/uploads/ticket-attachments/' + filename]);
+    return rows[0];
+};
+
 module.exports = {
+    getTicketByAttachment,
     createTicket,
     getTicketsByEmployee,
     getAllTickets,
@@ -177,5 +199,5 @@ module.exports = {
     assignTicket,
     addComment,
     getTicketTimeline,
-    getTicketStats
+    getTicketStats, getTicketsByMonth
 };

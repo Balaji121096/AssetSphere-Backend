@@ -10,7 +10,7 @@ const { uploadTicketAttachment } = require("../middleware/ticketUpload");
 router.use(verifyToken);
 
 // Employee/User routes
-router.post("/", authorizeRole("Employee", "Admin", "Manager", "IT"), uploadTicketAttachment.single('attachment'), ticketController.createTicket);
+router.post("/", authorizeRole("Employee", "Admin", "Manager", "IT", "Super Admin"), uploadTicketAttachment.single('attachment'), ticketController.createTicket);
 router.get("/my-tickets", ticketController.getMyTickets);
 router.get("/my-assets", ticketController.getMyAssets);
 
@@ -19,6 +19,7 @@ router.get("/", authorizeRole("Admin", "Manager", "IT", "Super Admin"), ticketCo
 router.get("/stats", authorizeRole("Admin", "Manager", "IT", "Super Admin"), ticketController.getStats);
 
 // Shared specific ticket routes
+router.get("/report", authorizeRole("Admin", "Manager", "IT", "Super Admin"), ticketController.getTicketReport);
 router.get("/:id", ticketController.getTicketDetails);
 router.post("/:id/comments", ticketController.addComment);
 
@@ -27,4 +28,9 @@ router.put("/:id/status", authorizeRole("Admin", "Manager", "IT", "Super Admin")
 router.put("/:id/priority", authorizeRole("Admin", "Manager", "IT", "Super Admin"), ticketController.updatePriority);
 router.put("/:id/assign", authorizeRole("Admin", "Manager", "IT", "Super Admin"), ticketController.assignTicket);
 
+// View attachment
+router.get("/attachments/:filename", ticketController.viewAttachment);
+router.get("/attachments/:filename/download", ticketController.downloadAttachment);
+
 module.exports = router;
+

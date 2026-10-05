@@ -857,12 +857,12 @@ const deleteUser = async (req, res) => {
         // =================================================
 
         if (
-            targetUser.role === "Super Admin"
+            targetUser.role === "Super Admin" && req.user.role !== "Super Admin"
         ) {
             return res.status(403).json({
                 success: false,
                 message:
-                    "Super Admin account cannot be deleted"
+                    "Only Super Admin can delete another Super Admin account"
             });
         }
 

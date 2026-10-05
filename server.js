@@ -19,6 +19,7 @@ const vendorDocumentRoutes = require("./routes/vendorDocumentRoutes");
 const purchaseRoutes = require("./routes/purchaseRoutes");
 const companySettingsRoutes = require("./routes/companySettingsRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 
 // =====================================================
 // USER ROUTES
@@ -37,7 +38,12 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
-app.use("/uploads", express.static(require("path").join(__dirname, "uploads")));
+app.use("/uploads", (req, res, next) => {
+    if (req.path.startsWith('/ticket-attachments')) {
+        return res.status(403).json({ success: false, message: "Access Denied. Use API route." });
+    }
+    next();
+}, express.static(require("path").join(__dirname, "uploads")));
 
 
 // =====================================================
@@ -203,6 +209,15 @@ app.use(
     "/api/tickets",
     ticketRoutes
 );
+// =====================================================
+// PROJECT API
+// =====================================================
+
+app.use(
+    "/api/projects",
+    projectRoutes
+);
+
 
 
 // =====================================================
@@ -245,10 +260,6 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-
-    console.log(
-        `🚀 Server running on Port ${PORT}`
-    );
-
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on Port ${PORT}`);
 });

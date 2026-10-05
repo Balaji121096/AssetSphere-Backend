@@ -128,7 +128,71 @@ const getStats = async (req, res) => {
     }
 };
 
+
+const checkAttachmentAccess = (req, ticket) => {
+    const role = req.user.role;
+    if (role === 'Super Admin' || role === 'Admin' || role === 'Manager' || role === 'IT' || role === 'HR') return true;
+    if (ticket.employee_id === req.user.employee_id) return true;
+    if (ticket.assigned_to === req.user.employee_id) return true;
+    return false;
+};
+
+const viewAttachment = async (req, res) => {
+    try {
+        const { filename } = req.params;
+        const ticket = await ticketModel.getTicketByAttachment(filename);
+        if (!ticket) return res.status(404).json({ success: false, message: "Not found" });
+
+        if (!checkAttachmentAccess(req, ticket)) {
+            return res.status(403).json({ success: false, message: "Access Denied" });
+        }
+
+        const filePath = path.join(__dirname, "../uploads/ticket-attachments", filename);
+        res.sendFile(filePath);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const downloadAttachment = async (req, res) => {
+    try {
+        const { filename } = req.params;
+        const ticket = await ticketModel.getTicketByAttachment(filename);
+        if (!ticket) return res.status(404).json({ success: false, message: "Not found" });
+
+        if (!checkAttachmentAccess(req, ticket)) {
+            return res.status(403).json({ success: false, message: "Access Denied" });
+        }
+
+        const filePath = path.join(__dirname, "../uploads/ticket-attachments", filename);
+        res.download(filePath);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const getTicketReport = async (req, res) => {
+    try {
+        const { month } = req.query;
+        let tickets;
+        if (month) {
+            tickets = await ticketModel.getTicketsByMonth(month);
+        } else {
+            tickets = await ticketModel.getAllTickets();
+        }
+        res.json({ success: true, data: tickets });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Failed to fetch ticket report" });
+    }
+};
+
 module.exports = {
+    viewAttachment,
+    downloadAttachment,
+    getTicketReport,
     createTicket,
     getMyTickets,
     getMyAssets,
@@ -140,3 +204,5 @@ module.exports = {
     addComment,
     getStats
 };
+
+
