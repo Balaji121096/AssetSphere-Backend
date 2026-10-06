@@ -19,6 +19,7 @@ router.delete("/:id", pc.deleteProject);
 // Members
 router.get("/:id/members", pc.getMembers);
 router.post("/:id/members", pc.addMember);
+router.put("/:id/members/:employee_id", pc.updateMember);
 router.delete("/:id/members/:employee_id", pc.removeMember);
 
 // Tasks
@@ -36,6 +37,7 @@ router.delete("/:id/timelogs/:log_id", pc.deleteTimeLog);
 // Daily Updates
 router.get("/:id/updates", pc.getUpdates);
 router.post("/:id/updates", pc.createDailyUpdate);
+router.put("/:id/updates/:update_id", pc.updateDailyUpdate);
 
 // Meetings
 router.get("/:id/meetings", pc.getMeetings);
@@ -47,9 +49,13 @@ router.delete("/:id/meetings/:meeting_id", pc.deleteMeeting);
 router.get("/:id/files", pc.getFiles);
 router.post("/:id/files", uploadProjectFile.single("file"), pc.uploadFile);
 router.get("/:id/files/:file_id/download", pc.downloadFile);
+router.get("/:id/files/:file_id/view", pc.viewFile);
 router.delete("/:id/files/:file_id", pc.deleteFile);
 
 // Activity
 router.get("/:id/activity", pc.getActivity);
 
 module.exports = router;
+
+
+

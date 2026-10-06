@@ -12,8 +12,18 @@ const MANAGER_ROLES = ["Super Admin", "Admin", "Manager"];
 // ─── helper: check if user can access the project ───
 const canAccess = async (req, project_id) => {
     const role = req.user.role;
-    if (MANAGER_ROLES.includes(role)) return true;
-    // Employee: must be a member
+    if (ADMIN_ROLES.includes(role)) return true;
+    
+    // For Manager, they must be the manager, creator, or a member
+    if (role === "Manager") {
+        const project = await pm.getProjectById(project_id);
+        if (!project) return false;
+        if (project.manager_employee_id === req.user.employee_id || project.created_by === req.user.user_id) return true;
+        if (req.user.employee_id) return await pm.isMember(project_id, req.user.employee_id);
+        return false;
+    }
+    
+    // For Employee/Viewer: must be a member
     if (req.user.employee_id) {
         return await pm.isMember(project_id, req.user.employee_id);
     }
@@ -21,7 +31,19 @@ const canAccess = async (req, project_id) => {
 };
 
 // ─── helper: check if user can manage the project ───
-const canManage = (req) => MANAGER_ROLES.includes(req.user.role);
+const canManage = async (req, project_id = null) => {
+    const role = req.user.role;
+    if (ADMIN_ROLES.includes(role)) return true;
+    
+    if (role === "Manager") {
+        if (!project_id) return true; // General creation/management endpoint
+        const project = await pm.getProjectById(project_id);
+        if (project && (project.manager_employee_id === req.user.employee_id || project.created_by === req.user.user_id)) {
+            return true;
+        }
+    }
+    return false;
+};
 
 // =====================================================
 // PROJECTS
@@ -30,8 +52,11 @@ const canManage = (req) => MANAGER_ROLES.includes(req.user.role);
 const getProjects = async (req, res) => {
     try {
         let projects;
-        if (MANAGER_ROLES.includes(req.user.role)) {
+        if (ADMIN_ROLES.includes(req.user.role)) {
             projects = await pm.getAllProjects();
+        } else if (req.user.role === "Manager") {
+            if (!req.user.employee_id) return res.json({ success: true, data: [] });
+            projects = await pm.getProjectsForManager(req.user.employee_id, req.user.user_id);
         } else {
             if (!req.user.employee_id) return res.json({ success: true, data: [] });
             projects = await pm.getProjectsByEmployee(req.user.employee_id);
@@ -61,7 +86,7 @@ const getProject = async (req, res) => {
 
 const createProject = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         const result = await pm.createProject(req.body, req.user.user_id);
         res.status(201).json({ success: true, message: "Project created", data: result });
@@ -75,7 +100,7 @@ const createProject = async (req, res) => {
 
 const updateProject = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.updateProject(req.params.id, req.body, req.user.user_id);
         res.json({ success: true, message: "Project updated" });
@@ -87,7 +112,7 @@ const updateProject = async (req, res) => {
 
 const deleteProject = async (req, res) => {
     try {
-        if (!ADMIN_ROLES.includes(req.user.role))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.deleteProject(req.params.id);
         res.json({ success: true, message: "Project deleted" });
@@ -99,8 +124,32 @@ const deleteProject = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
     try {
-        const data = await pm.getDashboardStats();
-        res.json({ success: true, data });
+        let projects;
+        if (ADMIN_ROLES.includes(req.user.role)) {
+            projects = await pm.getAllProjects();
+        } else if (req.user.role === "Manager") {
+            if (!req.user.employee_id) return res.json({ success: true, data: {} });
+            projects = await pm.getProjectsForManager(req.user.employee_id, req.user.user_id);
+        } else {
+            if (!req.user.employee_id) return res.json({ success: true, data: {} });
+            projects = await pm.getProjectsByEmployee(req.user.employee_id);
+        }
+        
+        // Compute stats from the projects they have access to
+        const stats = {
+            total_projects: projects.length,
+            active_projects: projects.filter(p => p.status === 'In Progress').length,
+            completed_projects: projects.filter(p => p.status === 'Completed').length,
+            on_hold_projects: projects.filter(p => p.status === 'On Hold').length,
+            overdue_projects: projects.filter(p => !['Completed','Cancelled'].includes(p.status) && new Date(p.expected_end_date) < new Date()).length,
+            // We can return total hours logged for these projects by summing their individual stats or returning 0
+            // The frontend computes task_count and completed_tasks per project
+        };
+        // It's acceptable to fetch global task stats from model but filtered by allowed project_ids
+        const projectIds = projects.map(p => p.project_id);
+        const detailedStats = projectIds.length > 0 ? await pm.getDetailedStats(projectIds) : { tasks_due_today: 0, overdue_tasks: 0, total_hours_logged: 0 };
+        
+        res.json({ success: true, data: { ...stats, ...detailedStats } });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Failed to fetch stats" });
@@ -125,7 +174,7 @@ const getMembers = async (req, res) => {
 
 const addMember = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         const { employee_id, project_role } = req.body;
         if (!employee_id) return res.status(400).json({ success: false, message: "employee_id required" });
@@ -137,9 +186,20 @@ const addMember = async (req, res) => {
     }
 };
 
+const updateMember = async (req, res) => {
+    try {
+        if (!(await canManage(req, req.params.id))) return res.status(403).json({ success: false, message: "Access denied" });
+        await pm.updateProjectMember(req.params.id, req.params.employee_id, req.body.project_role, req.user.user_id);
+        res.json({ success: true, message: "Member updated" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to update member" });
+    }
+};
+
 const removeMember = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.removeProjectMember(req.params.id, req.params.employee_id, req.user.user_id);
         res.json({ success: true, message: "Member removed" });
@@ -167,7 +227,7 @@ const getTasks = async (req, res) => {
 
 const createTask = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         if (!req.body.task_name)
             return res.status(400).json({ success: false, message: "task_name required" });
@@ -199,7 +259,7 @@ const updateTask = async (req, res) => {
 
 const deleteTask = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.deleteTask(req.params.task_id);
         res.json({ success: true, message: "Task deleted" });
@@ -259,7 +319,7 @@ const updateTimeLog = async (req, res) => {
 
 const deleteTimeLog = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.deleteTimeLog(req.params.log_id);
         res.json({ success: true, message: "Time log deleted" });
@@ -303,6 +363,18 @@ const createDailyUpdate = async (req, res) => {
 };
 
 // =====================================================
+const updateDailyUpdate = async (req, res) => {
+    try {
+        if (!(await canAccess(req, req.params.id))) return res.status(403).json({ success: false, message: "Access denied" });
+        await pm.updateProjectUpdate(req.params.update_id, req.body, req.user.user_id, req.params.id);
+        res.json({ success: true, message: "Update modified" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to modify update" });
+    }
+};
+
+// =====================================================
 // MEETINGS
 // =====================================================
 
@@ -320,7 +392,7 @@ const getMeetings = async (req, res) => {
 
 const createMeeting = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         if (!req.body.title || !req.body.meeting_date)
             return res.status(400).json({ success: false, message: "title and meeting_date required" });
@@ -334,7 +406,7 @@ const createMeeting = async (req, res) => {
 
 const updateMeeting = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.updateMeeting(req.params.meeting_id, req.params.id, req.body, req.user.user_id);
         res.json({ success: true, message: "Meeting updated" });
@@ -346,7 +418,7 @@ const updateMeeting = async (req, res) => {
 
 const deleteMeeting = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         await pm.deleteMeeting(req.params.meeting_id);
         res.json({ success: true, message: "Meeting deleted" });
@@ -407,9 +479,23 @@ const downloadFile = async (req, res) => {
     }
 };
 
+const viewFile = async (req, res) => {
+    try {
+        if (!(await canAccess(req, req.params.id))) return res.status(403).json({ success: false, message: "Access denied" });
+        const files = await pm.getProjectFiles(req.params.id);
+        const file = files.find(f => f.file_id === parseInt(req.params.file_id));
+        if (!file) return res.status(404).json({ success: false, message: "File not found" });
+        const filePath = path.join(__dirname, "..", file.file_path);
+        res.sendFile(filePath);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to view file" });
+    }
+};
+
 const deleteFile = async (req, res) => {
     try {
-        if (!canManage(req))
+        if (!(await canManage(req, req.params.id)))
             return res.status(403).json({ success: false, message: "Access denied" });
         const fileRecord = await pm.deleteFile(req.params.file_id);
         if (fileRecord) {
@@ -441,11 +527,15 @@ const getActivity = async (req, res) => {
 
 module.exports = {
     getProjects, getProject, createProject, updateProject, deleteProject, getDashboardStats,
-    getMembers, addMember, removeMember,
+    getMembers, addMember, updateMember, removeMember,
     getTasks, createTask, updateTask, deleteTask,
     getTimeLogs, createTimeLog, updateTimeLog, deleteTimeLog,
-    getUpdates, createDailyUpdate,
+    getUpdates, createDailyUpdate, updateDailyUpdate,
     getMeetings, createMeeting, updateMeeting, deleteMeeting,
-    getFiles, uploadFile, downloadFile, deleteFile,
+    getFiles, uploadFile, downloadFile, viewFile, deleteFile,
     getActivity
 };
+
+
+
+

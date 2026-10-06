@@ -69,6 +69,23 @@ const getProjectsByEmployee = async (employee_id) => {
     return rows;
 };
 
+const getProjectsForManager = async (employee_id, user_id) => {
+    const [rows] = await db.query(`
+        SELECT p.*, e.display_name AS manager_name,
+               (SELECT pm.project_role FROM project_members pm WHERE pm.project_id = p.project_id AND pm.employee_id = ? AND pm.status = 'Active' LIMIT 1) AS project_role,
+               (SELECT COUNT(*) FROM project_members pm2 WHERE pm2.project_id = p.project_id AND pm2.status = 'Active') AS member_count,
+               (SELECT COUNT(*) FROM project_tasks pt WHERE pt.project_id = p.project_id) AS task_count,
+               (SELECT COUNT(*) FROM project_tasks pt WHERE pt.project_id = p.project_id AND pt.status = 'Completed') AS completed_tasks
+        FROM projects p
+        LEFT JOIN employees e ON p.manager_employee_id = e.employee_id
+        WHERE p.manager_employee_id = ? OR p.created_by = ? OR p.project_id IN (
+            SELECT project_id FROM project_members pm3 WHERE pm3.employee_id = ? AND pm3.status = 'Active'
+        )
+        ORDER BY p.created_at DESC
+    `, [employee_id, employee_id, user_id, employee_id]);
+    return rows;
+};
+
 const getProjectById = async (project_id) => {
     const [rows] = await db.query(`
         SELECT p.*, e.display_name AS manager_name, e.employee_code AS manager_code,
@@ -152,6 +169,14 @@ const addProjectMember = async (project_id, employee_id, project_role, added_by)
     );
     const [emp] = await db.query("SELECT display_name FROM employees WHERE employee_id = ?", [employee_id]);
     await logActivity(project_id, added_by, "member_added", `${emp[0]?.display_name || "Employee"} added as ${project_role || "Member"}`);
+};
+
+const updateProjectMember = async (project_id, employee_id, project_role, user_id) => {
+    await db.query(
+        "UPDATE project_members SET project_role=? WHERE project_id=? AND employee_id=?",
+        [project_role || 'Member', project_id, employee_id]
+    );
+    await logActivity(project_id, user_id, "member_updated", 'Member role updated');
 };
 
 const removeProjectMember = async (project_id, employee_id, user_id) => {
@@ -335,6 +360,14 @@ const updateDailyUpdate = async (update_id, data) => {
 };
 
 // =====================================================
+const updateProjectUpdate = async (update_id, data, user_id, project_id) => {
+    await db.query(
+        "UPDATE project_updates SET update_date=?, tasks_worked_on=?, work_completed=?, work_in_progress=?, issues_blockers=?, next_planned_work=?, time_spent=? WHERE update_id=?",
+        [data.update_date, data.tasks_worked_on || null, data.work_completed || null, data.work_in_progress || null, data.issues_blockers || null, data.next_planned_work || null, data.time_spent || null, update_id]
+    );
+    await logActivity(project_id, user_id, "update_edited", 'Daily update modified');
+};
+
 // MEETINGS
 // =====================================================
 
@@ -435,37 +468,38 @@ const getActivity = async (project_id, limit = 50) => {
 // DASHBOARD SUMMARY
 // =====================================================
 
-const getDashboardStats = async () => {
-    const [[stats]] = await db.query(`
-        SELECT
-            COUNT(*) AS total_projects,
-            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) AS active_projects,
-            SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_projects,
-            SUM(CASE WHEN status = 'On Hold' THEN 1 ELSE 0 END) AS on_hold_projects,
-            SUM(CASE WHEN status NOT IN ('Completed','Cancelled') AND expected_end_date < CURDATE() THEN 1 ELSE 0 END) AS overdue_projects
-        FROM projects
-    `);
-
+const getDetailedStats = async (projectIds) => {
+    if (!projectIds || projectIds.length === 0) return { tasks_due_today: 0, overdue_tasks: 0, total_hours_logged: 0 };
+    
+    const placeholders = projectIds.map(() => '?').join(',');
     const [[taskStats]] = await db.query(`
         SELECT
             SUM(CASE WHEN due_date = CURDATE() AND status NOT IN ('Completed','Cancelled') THEN 1 ELSE 0 END) AS tasks_due_today,
             SUM(CASE WHEN due_date < CURDATE() AND status NOT IN ('Completed','Cancelled') THEN 1 ELSE 0 END) AS overdue_tasks
-        FROM project_tasks
-    `);
+        FROM project_tasks WHERE project_id IN (${placeholders})
+    `, projectIds);
 
-    const [[hours]] = await db.query("SELECT COALESCE(SUM(total_hours),0) AS total_hours_logged FROM project_time_logs");
+    const [[hours]] = await db.query(`
+        SELECT COALESCE(SUM(total_hours),0) AS total_hours_logged 
+        FROM project_time_logs WHERE project_id IN (${placeholders})
+    `, projectIds);
 
-    return { ...stats, ...taskStats, ...hours };
+    return { ...taskStats, ...hours };
 };
 
 module.exports = {
-    createProject, getAllProjects, getProjectsByEmployee, getProjectById,
+    createProject, getAllProjects, getProjectsByEmployee, getProjectsForManager, getProjectById,
     updateProject, deleteProject, getProjectStats,
-    getProjectMembers, addProjectMember, removeProjectMember, isMember,
+    getProjectMembers, addProjectMember, updateProjectMember, removeProjectMember, isMember,
     getProjectTasks, getTaskById, createTask, updateTask, deleteTask,
     getTimeLogs, createTimeLog, updateTimeLog, deleteTimeLog,
-    getProjectUpdates, createUpdate, updateDailyUpdate,
+    getProjectUpdates, createUpdate, updateProjectUpdate, updateDailyUpdate,
     getMeetings, createMeeting, updateMeeting, deleteMeeting,
     getProjectFiles, createFileRecord, deleteFile,
-    getActivity, getDashboardStats, logActivity
+    getActivity, getDetailedStats, logActivity
 };
+
+
+
+
+
