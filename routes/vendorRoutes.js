@@ -24,9 +24,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     vendorController.getVendors
@@ -45,9 +43,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     vendorController.getVendorById
@@ -66,7 +62,6 @@ router.post(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -86,7 +81,6 @@ router.put(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -106,7 +100,6 @@ router.delete(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 

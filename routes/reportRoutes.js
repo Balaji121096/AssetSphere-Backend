@@ -24,9 +24,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getAssetReportSummary
@@ -45,9 +43,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getAllAssets
@@ -66,9 +62,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getAssignedAssets
@@ -87,9 +81,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getScrapAssets
@@ -108,9 +100,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getRepairAssets
@@ -129,9 +119,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getLostAssets
@@ -150,9 +138,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getEmployeeAssets
@@ -171,9 +157,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     reportController.getPurchaseReport

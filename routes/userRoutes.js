@@ -65,9 +65,7 @@ router.get(
     verifyToken,
 
     authorizeRole(
-        "Admin",
-        "Manager",
-        "Viewer"
+        "Admin"
     ),
 
     userController.getUsers
@@ -85,9 +83,7 @@ router.get(
     verifyToken,
 
     authorizeRole(
-        "Admin",
-        "Manager",
-        "Viewer"
+        "Admin"
     ),
 
     userController.getUserById
@@ -105,8 +101,7 @@ router.post(
     verifyToken,
 
     authorizeRole(
-        "Admin",
-        "Manager"
+        "Admin"
     ),
 
     userController.addUser
@@ -124,8 +119,7 @@ router.put(
     verifyToken,
 
     authorizeRole(
-        "Admin",
-        "Manager"
+        "Admin"
     ),
 
     userController.updateUser
@@ -159,8 +153,7 @@ router.delete(
     verifyToken,
 
     authorizeRole(
-        "Admin",
-        "Manager"
+        "Admin"
     ),
 
     userController.deleteUser

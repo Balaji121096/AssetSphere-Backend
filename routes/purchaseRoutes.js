@@ -28,9 +28,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     purchaseController.getPurchaseSummary
@@ -49,7 +47,6 @@ router.post(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -71,9 +68,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     purchaseController.getPurchaseDocument
@@ -92,7 +87,6 @@ router.delete(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -112,9 +106,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     purchaseController.getPurchases
@@ -133,9 +125,7 @@ router.get(
 
     authorizeRole(
         "Admin",
-        "Manager",
-        "IT",
-        "Viewer"
+        "IT"
     ),
 
     purchaseController.getPurchaseById
@@ -154,7 +144,6 @@ router.post(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -174,7 +163,6 @@ router.put(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
@@ -194,7 +182,6 @@ router.delete(
 
     authorizeRole(
         "Admin",
-        "Manager",
         "IT"
     ),
 
