@@ -8,6 +8,8 @@ router.use(verifyToken);
 
 // Dashboard
 router.get("/stats", pc.getDashboardStats);
+router.get("/roles", pc.getProjectRoles);
+router.post("/roles", pc.createProjectRole);
 
 // Projects
 router.get("/", pc.getProjects);
@@ -56,6 +58,7 @@ router.delete("/:id/files/:file_id", pc.deleteFile);
 router.get("/:id/activity", pc.getActivity);
 
 module.exports = router;
+
 
 
 

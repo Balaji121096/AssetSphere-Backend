@@ -1,4 +1,4 @@
-﻿// =====================================================
+// =====================================================
 // projectController.js
 // =====================================================
 
@@ -9,7 +9,7 @@ const fs = require("fs");
 const ADMIN_ROLES = ["Super Admin", "Admin"];
 const MANAGER_ROLES = ["Super Admin", "Admin", "Manager"];
 
-// ─── helper: check if user can access the project ───
+// --- helper: check if user can access the project ---
 const canAccess = async (req, project_id) => {
     const role = req.user.role;
     if (ADMIN_ROLES.includes(role)) return true;
@@ -30,7 +30,7 @@ const canAccess = async (req, project_id) => {
     return false;
 };
 
-// ─── helper: check if user can manage the project ───
+// --- helper: check if user can manage the project ---
 const canManage = async (req, project_id = null) => {
     const role = req.user.role;
     if (ADMIN_ROLES.includes(role)) return true;
@@ -525,7 +525,28 @@ const getActivity = async (req, res) => {
     }
 };
 
+const getProjectRoles = async (req, res) => {
+    try {
+        const roles = await pm.getProjectRoles();
+        res.json({ success: true, data: roles });
+    } catch(err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+const createProjectRole = async (req, res) => {
+    try {
+        if (!['Super Admin', 'Admin'].includes(req.user.role)) return res.status(403).json({ success: false, message: 'Access denied' });
+        if (!req.body.role_name) return res.status(400).json({ success: false, message: 'Role name required' });
+        const role = await pm.createProjectRole(req.body.role_name);
+        res.json({ success: true, data: role });
+    } catch(err) {
+        if(err.code === 'ER_DUP_ENTRY') return res.status(400).json({ success: false, message: 'Role already exists' });
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 module.exports = {
+    getProjectRoles, createProjectRole,
     getProjects, getProject, createProject, updateProject, deleteProject, getDashboardStats,
     getMembers, addMember, updateMember, removeMember,
     getTasks, createTask, updateTask, deleteTask,
@@ -535,6 +556,7 @@ module.exports = {
     getFiles, uploadFile, downloadFile, viewFile, deleteFile,
     getActivity
 };
+
 
 
 

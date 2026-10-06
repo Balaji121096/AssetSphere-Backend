@@ -487,7 +487,16 @@ const getDetailedStats = async (projectIds) => {
     return { ...taskStats, ...hours };
 };
 
+const getProjectRoles = async () => {
+    const [rows] = await db.query('SELECT * FROM project_roles ORDER BY role_name');
+    return rows;
+};
+const createProjectRole = async (role_name) => {
+    const [res] = await db.query('INSERT INTO project_roles (role_name) VALUES (?)', [role_name]);
+    return { role_id: res.insertId, role_name };
+};
 module.exports = {
+    getProjectRoles, createProjectRole,
     createProject, getAllProjects, getProjectsByEmployee, getProjectsForManager, getProjectById,
     updateProject, deleteProject, getProjectStats,
     getProjectMembers, addProjectMember, updateProjectMember, removeProjectMember, isMember,
@@ -498,6 +507,8 @@ module.exports = {
     getProjectFiles, createFileRecord, deleteFile,
     getActivity, getDetailedStats, logActivity
 };
+
+
 
 
 
