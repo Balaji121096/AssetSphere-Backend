@@ -187,6 +187,67 @@ const getExpiryAlerts = async (req, res) => {
 };
 
 
+// GET Software Summary (total qty, total cost, avg cost)
+const getSoftwareSummary = async (req, res) => {
+    try {
+
+        const month = req.query.month
+            ? parseInt(req.query.month, 10)
+            : null;
+
+        const year = req.query.year
+            ? parseInt(req.query.year, 10)
+            : null;
+
+        // Validate month range
+        if (
+            month !== null &&
+            (Number.isNaN(month) || month < 1 || month > 12)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid month. Must be 1–12."
+            });
+        }
+
+        // Validate year range
+        if (
+            year !== null &&
+            (Number.isNaN(year) || year < 2000 || year > 2100)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid year."
+            });
+        }
+
+        const summary = await softwareModel.getSoftwareSummary(
+            month,
+            year
+        );
+
+        res.json({
+            success: true,
+            data: {
+                total_qty: Number(summary.total_qty) || 0,
+                total_cost: Number(summary.total_cost) || 0,
+                avg_cost: Number(summary.avg_cost) || 0
+            }
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+
+    }
+};
+
+
 // EXPORT
 module.exports = {
     getSoftware,
@@ -194,5 +255,6 @@ module.exports = {
     addSoftware,
     updateSoftware,
     deleteSoftware,
-    getExpiryAlerts
+    getExpiryAlerts,
+    getSoftwareSummary
 };

@@ -44,6 +44,24 @@ router.get(
 
 
 // =========================================================
+// GET SOFTWARE SUMMARY (total qty, total cost, avg cost)
+// Query params: ?month=MM&year=YYYY (both optional)
+// =========================================================
+
+router.get(
+    "/summary",
+    verifyToken,
+    authorizeRole(
+        "Admin",
+        "Manager",
+        "IT",
+        "Viewer"
+    ),
+    softwareController.getSoftwareSummary
+);
+
+
+// =========================================================
 // GET SOFTWARE BY ID
 // =========================================================
 

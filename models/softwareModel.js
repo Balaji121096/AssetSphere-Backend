@@ -236,11 +236,60 @@ const getExpiryAlerts = async () => {
     return rows;
 };
 
+// GET software summary (total qty, total cost, avg cost)
+// month: 1-12 or null for all months
+// year: e.g. 2026 or null for all years
+const getSoftwareSummary = async (month, year) => {
+
+    let whereClauses = [];
+    let params = [];
+
+    if (month && year) {
+        whereClauses.push(
+            "MONTH(sp.purchase_date) = ? AND YEAR(sp.purchase_date) = ?"
+        );
+        params.push(Number(month), Number(year));
+    } else if (year) {
+        whereClauses.push("YEAR(sp.purchase_date) = ?");
+        params.push(Number(year));
+    }
+
+    const whereSQL =
+        whereClauses.length > 0
+            ? `WHERE ${whereClauses.join(" AND ")}`
+            : "";
+
+    const [rows] = await db.query(
+        `
+        SELECT
+            COALESCE(SUM(sp.total_licenses), 0) AS total_qty,
+            COALESCE(SUM(sp.cost), 0)           AS total_cost,
+            CASE
+                WHEN COUNT(CASE WHEN sp.cost IS NOT NULL AND sp.cost > 0 THEN 1 END) = 0
+                    THEN 0
+                ELSE
+                    COALESCE(
+                        SUM(CASE WHEN sp.cost IS NOT NULL AND sp.cost > 0 THEN sp.cost ELSE 0 END)
+                        /
+                        COUNT(CASE WHEN sp.cost IS NOT NULL AND sp.cost > 0 THEN 1 END),
+                        0
+                    )
+            END AS avg_cost
+        FROM software_products sp
+        ${whereSQL}
+        `,
+        params
+    );
+
+    return rows[0];
+};
+
 module.exports = {
     getAllSoftware,
     getSoftwareById,
     addSoftware,
     updateSoftware,
     deleteSoftware,
-    getExpiryAlerts
+    getExpiryAlerts,
+    getSoftwareSummary
 };
