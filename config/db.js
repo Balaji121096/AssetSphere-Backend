@@ -1,8 +1,19 @@
+
 const mysql = require("mysql2/promise");
 const fs = require("fs");
 const path = require("path");
 
-const caPath = path.join(__dirname, "ca.pem");
+let sslCA;
+
+if (process.env.DB_SSL_CA_BASE64) {
+  sslCA = Buffer.from(
+    process.env.DB_SSL_CA_BASE64,
+    "base64"
+  ).toString("utf8");
+} else {
+  const caPath = path.join(__dirname, "ca.pem");
+  sslCA = fs.readFileSync(caPath, "utf8");
+}
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -12,7 +23,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 
   ssl: {
-    ca: fs.readFileSync(caPath, "utf8"),
+    ca: sslCA,
     rejectUnauthorized: true
   },
 
@@ -24,10 +35,10 @@ const pool = mysql.createPool({
 (async () => {
   try {
     const connection = await pool.getConnection();
-    console.log("✅ Aiven MySQL Connected Successfully");
+    console.log("Aiven MySQL Connected Successfully");
     connection.release();
   } catch (err) {
-    console.error("❌ Database Connection Failed:", err.message);
+    console.error("Database Connection Failed:", err.message);
   }
 })();
 
