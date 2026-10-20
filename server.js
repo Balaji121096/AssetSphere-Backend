@@ -258,8 +258,12 @@ app.use((req, res) => {
 // SERVER
 // =====================================================
 
-const PORT = process.env.PORT || 5000;
+module.exports = app;
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on Port ${PORT}`);
-});
+if (require.main === module) {
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, "0.0.0.0", () => {
+        console.log(`🚀 Server running on Port ${PORT}`);
+    });
+}
