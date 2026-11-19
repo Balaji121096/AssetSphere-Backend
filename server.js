@@ -255,6 +255,21 @@ app.use((req, res) => {
 
 
 // =====================================================
+// GLOBAL ERROR HANDLER
+// =====================================================
+
+app.use((err, req, res, next) => {
+    console.error("Global Server Error:", err);
+    if (res.headersSent) {
+        return next(err);
+    }
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+});
+
+// =====================================================
 // SERVER
 // =====================================================
 

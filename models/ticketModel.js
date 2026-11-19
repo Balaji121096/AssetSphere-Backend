@@ -1,7 +1,6 @@
-
 const db = require("../config/db");
 
-const createTicket = async (ticketData) => {
+const createTicket = async (ticketData, fileInfo = null) => {
     const [rows] = await db.query("SELECT COUNT(*) as count FROM tickets");
     const count = rows[0].count + 1;
     const ticketNumber = "TKT-" + count.toString().padStart(4, "0");
@@ -28,6 +27,23 @@ const createTicket = async (ticketData) => {
         "INSERT INTO ticket_status_history (ticket_id, changed_by, old_status, new_status) VALUES (?, ?, NULL, 'Open')",
         [result.insertId, ticketData.user_id]
     );
+
+    // Save attachment to Aiven MySQL database for Vercel serverless persistence
+    if (fileInfo && fileInfo.file_data) {
+        await db.query(
+            `INSERT INTO ticket_attachments 
+            (ticket_id, filename, original_name, mimetype, file_data, file_size) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                result.insertId,
+                fileInfo.filename,
+                fileInfo.original_name,
+                fileInfo.mimetype,
+                fileInfo.file_data,
+                fileInfo.file_size
+            ]
+        );
+    }
 
     return { ticket_id: result.insertId, ticket_number: ticketNumber };
 };
@@ -97,7 +113,6 @@ const updateTicketStatus = async (ticket_id, status, user_id) => {
     );
 };
 
-
 const updateTicketPriority = async (ticket_id, priority, user_id) => {
     // Get old priority
     const [oldRows] = await db.query("SELECT priority FROM tickets WHERE ticket_id = ?", [ticket_id]);
@@ -166,7 +181,6 @@ const getTicketStats = async () => {
     return rows[0];
 };
 
-
 const getTicketsByMonth = async (yearMonth) => {
     const query = `
         SELECT t.*, e.display_name AS employee_name, e.employee_code, 
@@ -187,8 +201,14 @@ const getTicketByAttachment = async (filename) => {
     return rows[0];
 };
 
+const getAttachmentByFilename = async (filename) => {
+    const [rows] = await db.query('SELECT * FROM ticket_attachments WHERE filename = ? LIMIT 1', [filename]);
+    return rows[0] || null;
+};
+
 module.exports = {
     getTicketByAttachment,
+    getAttachmentByFilename,
     createTicket,
     getTicketsByEmployee,
     getAllTickets,
@@ -199,5 +219,6 @@ module.exports = {
     assignTicket,
     addComment,
     getTicketTimeline,
-    getTicketStats, getTicketsByMonth
+    getTicketStats,
+    getTicketsByMonth
 };

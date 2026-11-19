@@ -1,6 +1,6 @@
-
 const ticketModel = require("../models/ticketModel");
 const path = require("path");
+const fs = require("fs");
 
 const createTicket = async (req, res) => {
     try {
@@ -8,16 +8,28 @@ const createTicket = async (req, res) => {
         if (!employee_id) return res.status(400).json({ success: false, message: "User is not linked to an employee" });
 
         const ticketData = { ...req.body, employee_id, user_id: req.user.user_id };
+        let fileInfo = null;
         
         if (req.file) {
-            ticketData.attachment_path = "/uploads/ticket-attachments/" + req.file.filename;
+            const extension = path.extname(req.file.originalname);
+            const name = path.basename(req.file.originalname, extension).replace(/[^a-zA-Z0-9-_]/g, "_");
+            const filename = `${Date.now()}-${name}${extension}`;
+            
+            ticketData.attachment_path = "/uploads/ticket-attachments/" + filename;
+            fileInfo = {
+                filename,
+                original_name: req.file.originalname,
+                mimetype: req.file.mimetype,
+                file_data: req.file.buffer,
+                file_size: req.file.size
+            };
         }
 
-        const result = await ticketModel.createTicket(ticketData);
+        const result = await ticketModel.createTicket(ticketData, fileInfo);
         res.status(201).json({ success: true, message: "Ticket created", data: result });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Failed to create ticket" });
+        console.error("Create Ticket Error:", error);
+        res.status(500).json({ success: false, message: error.message || "Failed to create ticket" });
     }
 };
 
@@ -147,10 +159,23 @@ const viewAttachment = async (req, res) => {
             return res.status(403).json({ success: false, message: "Access Denied" });
         }
 
+        // 1. Try DB first (Aiven MySQL - persistent across Vercel serverless)
+        const attachment = await ticketModel.getAttachmentByFilename(filename);
+        if (attachment && attachment.file_data) {
+            res.setHeader("Content-Type", attachment.mimetype || "application/octet-stream");
+            res.setHeader("Content-Disposition", `inline; filename="${attachment.original_name || filename}"`);
+            return res.send(attachment.file_data);
+        }
+
+        // 2. Fallback to local disk file if exists (for historical files created locally)
         const filePath = path.join(__dirname, "../uploads/ticket-attachments", filename);
-        res.sendFile(filePath);
+        if (fs.existsSync(filePath)) {
+            return res.sendFile(filePath);
+        }
+
+        res.status(404).json({ success: false, message: "Attachment not found" });
     } catch(err) {
-        console.error(err);
+        console.error("View Attachment Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -165,10 +190,23 @@ const downloadAttachment = async (req, res) => {
             return res.status(403).json({ success: false, message: "Access Denied" });
         }
 
+        // 1. Try DB first (Aiven MySQL - persistent across Vercel serverless)
+        const attachment = await ticketModel.getAttachmentByFilename(filename);
+        if (attachment && attachment.file_data) {
+            res.setHeader("Content-Type", attachment.mimetype || "application/octet-stream");
+            res.setHeader("Content-Disposition", `attachment; filename="${attachment.original_name || filename}"`);
+            return res.send(attachment.file_data);
+        }
+
+        // 2. Fallback to local disk file if exists (for historical files created locally)
         const filePath = path.join(__dirname, "../uploads/ticket-attachments", filename);
-        res.download(filePath);
+        if (fs.existsSync(filePath)) {
+            return res.download(filePath);
+        }
+
+        res.status(404).json({ success: false, message: "Attachment not found" });
     } catch(err) {
-        console.error(err);
+        console.error("Download Attachment Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -204,5 +242,3 @@ module.exports = {
     addComment,
     getStats
 };
-
-
