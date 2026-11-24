@@ -3,7 +3,11 @@ const path = require("path");
 const fs = require("fs");
 
 const uploadDir = path.join(__dirname, "../uploads/project-files");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+try {
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+} catch (e) {
+    // Read-only filesystem on serverless (e.g. Vercel)
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),

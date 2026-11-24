@@ -13,14 +13,17 @@ const uploadDirectory = path.join(
 );
 
 
-if (!fs.existsSync(uploadDirectory)) {
-
-    fs.mkdirSync(
-        uploadDirectory,
-        {
-            recursive: true
-        }
-    );
+try {
+    if (!fs.existsSync(uploadDirectory)) {
+        fs.mkdirSync(
+            uploadDirectory,
+            {
+                recursive: true
+            }
+        );
+    }
+} catch (e) {
+    // Read-only filesystem on serverless (e.g. Vercel)
 }
 
 
